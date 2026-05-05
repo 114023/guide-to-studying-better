@@ -2,624 +2,781 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Rogue Roulette</title>
+
 <style>
-*{box-sizing:border-box}
-body{
+*{
+  box-sizing:border-box;
   margin:0;
-  overflow:hidden;
-  font-family:Georgia,serif;
-  background:
-    radial-gradient(circle at top,#3a3024 0%,#161311 40%,#0b0a09 100%);
-  color:#ddd;
+  padding:0;
 }
+
+body{
+  overflow:hidden;
+  font-family:Georgia, serif;
+  background:
+    linear-gradient(rgba(0,0,0,.82),rgba(0,0,0,.82)),
+    url("https://static.vecteezy.com/system/resources/thumbnails/007/995/476/small/brick-wall-background-seamless-texture-pattern-illustration-free-vector.jpg");
+  background-size:300px;
+  color:white;
+}
+
 #game{
-  perspective:1200px;
   width:100vw;
   height:100vh;
   position:relative;
+  overflow:hidden;
 }
-.panel{
-  background:rgba(30,26,23,.78);
-  border:1px solid rgba(255,255,255,.08);
-  backdrop-filter:blur(6px);
-  box-shadow:
-  0 30px 60px rgba(0,0,0,.6),
-  0 5px 18px rgba(0,0,0,.9);
-}
-.player{
+
+/* ================= LIGHT ================= */
+
+#lightGlow{
   position:absolute;
-  top:50%;
-  width:280px;
-  transform:translateY(-50%);
-  padding:18px;
-  border-radius:4px;
-  transition:.2s;
+  width:700px;
+  height:700px;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle,
+      rgba(255,220,140,.30) 0%,
+      rgba(255,190,90,.15) 25%,
+      rgba(255,170,60,.06) 45%,
+      transparent 70%);
+  z-index:0;
+  mix-blend-mode:screen;
 }
-.player:hover{transform:translateY(-50%) scale(1.02)}
-.player.active{outline:2px solid #9f7b4b}
-.player.target{outline:2px solid #b44343;cursor:pointer}
-#p1{left:40px}
-#p2{right:40px}
-.name{
+
+#lamp{
+  position:absolute;
+  top:-10px;
+  left:50%;
+  width:120px;
+  height:220px;
+  transform-origin:top center;
+  animation:swing 4s ease-in-out infinite alternate;
+  z-index:1;
+}
+
+#lamp::before{
+  content:'';
+  position:absolute;
+  width:5px;
+  height:170px;
+  background:#111;
+  left:58px;
+}
+
+#lamp::after{
+  content:'';
+  position:absolute;
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,#fff4c2 0%,#ffc45c 35%,#663c10 100%);
+  bottom:0;
+  left:20px;
+}
+
+@keyframes swing{
+  from{transform:rotate(-12deg);}
+  to{transform:rotate(12deg);}
+}
+
+/* ================= TOP INFO ================= */
+
+#topBar{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  text-align:center;
+}
+
+#roundCounter{
   font-size:28px;
-  cursor:pointer;
+  letter-spacing:2px;
+  margin-bottom:8px;
+  color:#ffdd95;
 }
+
+#turnLabel{
+  font-size:18px;
+  color:#ccc;
+}
+
+/* ================= PLAYERS ================= */
+
+#players{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 60px;
+  z-index:5;
+}
+
+.player{
+  position:relative;
+  width:340px;
+  background:rgba(20,20,20,.78);
+  border:2px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(8px);
+  padding:18px;
+  transition:.25s;
+  overflow:visible;
+}
+
+.player.active{
+  border-color:#ffd84a;
+  box-shadow:
+    0 0 25px rgba(255,220,90,.55),
+    inset 0 0 15px rgba(255,220,90,.12);
+}
+
+.player.inactive{
+  filter:grayscale(.75) brightness(.75);
+}
+
+.shadow{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  opacity:.45;
+  filter:blur(8px);
+  background:black;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+}
+
+.name{
+  font-size:30px;
+  margin-bottom:8px;
+  cursor:pointer;
+  user-select:none;
+}
+
 .portrait{
   font-size:110px;
   text-align:center;
   margin:10px 0;
-  user-select:none;
 }
-.stat{
-  margin:6px 0;
-  color:#c6b79f;
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  gap:10px;
 }
-.effects{
-  min-height:22px;
-  font-size:13px;
-  color:#f0d4a4;
+
+.statBox{
+  flex:1;
+  background:rgba(255,255,255,.05);
+  padding:10px;
+  text-align:center;
 }
+
 .inventory{
   display:flex;
   gap:8px;
-  margin-top:12px;
+  margin-top:14px;
 }
+
 .slot{
   flex:1;
-  aspect-ratio:1/1;
-  border:1px solid rgba(255,255,255,.25);
+  min-height:60px;
   background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.1);
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   text-align:center;
-  font-size:11px;
-  padding:4px;
+  padding:6px;
   cursor:pointer;
   transition:.2s;
-  box-shadow:0 10px 25px rgba(0,0,0,.6);
+  font-size:12px;
 }
-.slot:hover{background:rgba(255,255,255,.06)}
+
+.slot:hover{
+  background:rgba(255,255,255,.08);
+}
+
+/* ================= CENTER ================= */
+
 #center{
   position:absolute;
   left:50%;
-  top:50%;
+  top:52%;
   transform:translate(-50%,-50%);
-  width:340px;
-  height:340px;
+  z-index:8;
   display:flex;
-  align-items:center;
-  justify-content:center;
   flex-direction:column;
+  align-items:center;
 }
+
 #gun{
-  position:absolute;
-  width:220px;
-  transition:transform .2s ease;
-  filter:drop-shadow(0 18px 16px rgba(0,0,0,.85));
+  font-size:180px;
+  transition:.2s;
   user-select:none;
-  transform-origin:center center;
 }
-#gun img{
-  width:100%;
-  pointer-events:none;
-}
-#lamp{
-  position:absolute;
-  top:-40px;
-  left:50%;
-  width:10px;
-  height:220px;
-  transform-origin:top center;
-  animation:swing 5s ease-in-out infinite alternate;
-}
-#lamp::before{
-  content:'';
-  position:absolute;
-  width:4px;
-  height:170px;
-  background:#1f1a17;
-  left:3px;
-}
-#lamp::after{
-  content:'';
-  position:absolute;
-  bottom:0;
-  left:-28px;
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  background:radial-gradient(circle,#f0c67a 0%,#7f6137 30%,#261d14 70%);
-  box-shadow:
-    0 0 120px rgba(255,205,120,.45),
-    0 0 240px rgba(255,205,120,.2);
-}
-@keyframes swing{
-  from{transform:rotate(-10deg)}
-  to{transform:rotate(10deg)}
-}
-}
-#chamber{
-  position:absolute;
-  top:30px;
-  font-size:42px;
-  color:#cfb28b;
-  letter-spacing:4px;
-}
-#turnLabel{
-  position:absolute;
-  bottom:35px;
-  color:#9e8a6d;
-  font-size:18px;
-}
-#toast{
-  position:absolute;
-  top:25px;
-  left:50%;
-  transform:translateX(-50%);
-  padding:14px 22px;
-  border-radius:2px;
-  background:rgba(0,0,0,.7);
-  opacity:0;
-  transition:.35s;
-  pointer-events:none;
-}
-#log,#controls{
+
+/* ================= AMMO ================= */
+
+#ammoBar{
   position:absolute;
   bottom:20px;
-  width:320px;
-  max-height:250px;
-  overflow:auto;
-  padding:14px;
-  border-radius:2px;
-  font-size:13px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:10px;
+  z-index:10;
 }
-#log{left:20px;display:none}
-#controls{right:20px;display:none}
-.logEntry{margin-bottom:8px;color:#bba98c}
-.flash{
-  animation:flash .45s ease;
+
+.bullet{
+  width:28px;
+  height:54px;
+  border-radius:8px 8px 4px 4px;
+  background:linear-gradient(to bottom,#ffd067 0%,#8f5b1f 100%);
+  border:2px solid rgba(0,0,0,.4);
+  opacity:.25;
 }
-@keyframes flash{
-  0%{filter:brightness(2)}
-  100%{filter:brightness(1)}
+
+.bullet.live{opacity:1;}
+.bullet.blank{
+  background:linear-gradient(to bottom,#cfd2d6,#666);
+  opacity:1;
 }
-.life{
-  color:#c94f4f;
+.bullet.fire{
+  background:linear-gradient(to bottom,#ffb347,#ff3c00);
+  opacity:1;
 }
-.expbar{
-  width:100%;
-  height:10px;
-  background:#191614;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:6px;
+
+/* ================= FX ================= */
+
+.player.hit-red{
+  animation:redGlow .7s;
 }
-.expfill{
-  height:100%;
-  background:linear-gradient(to right,#85603c,#d0a56d);
+
+.player.hit-blue{
+  animation:blueGlow .7s;
 }
+
+.player.hit-orange{
+  animation:orangeGlow .9s;
+}
+
+.player.hit-green{
+  animation:greenGlow .9s;
+}
+
+@keyframes redGlow{
+  0%{box-shadow:0 0 0 rgba(255,0,0,0);}
+  50%{box-shadow:0 0 50px rgba(255,0,0,.9);}
+  100%{box-shadow:0 0 0 rgba(255,0,0,0);}
+}
+
+@keyframes blueGlow{
+  0%{box-shadow:0 0 0 rgba(80,180,255,0);}
+  50%{box-shadow:0 0 50px rgba(80,180,255,.9);}
+  100%{box-shadow:0 0 0 rgba(80,180,255,0);}
+}
+
+@keyframes orangeGlow{
+  0%{box-shadow:0 0 0 rgba(255,120,0,0);}
+  50%{box-shadow:0 0 60px rgba(255,120,0,1);}
+  100%{box-shadow:0 0 0 rgba(255,120,0,0);}
+}
+
+@keyframes greenGlow{
+  0%{box-shadow:0 0 0 rgba(0,255,120,0);}
+  50%{box-shadow:0 0 60px rgba(0,255,120,1);}
+  100%{box-shadow:0 0 0 rgba(0,255,120,0);}
+}
+
+/* ================= ITEM FLOAT ================= */
+
+.floatItem{
+  position:absolute;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  border:1px solid rgba(255,255,255,.2);
+  padding:10px 16px;
+  z-index:999;
+  animation:floatToInv 1.5s forwards ease;
+  pointer-events:none;
+}
+
+@keyframes floatToInv{
+  0%{
+    opacity:0;
+    transform:translate(-50%,0) scale(.5);
+  }
+  20%{
+    opacity:1;
+  }
+  100%{
+    opacity:0;
+    transform:translate(var(--tx),var(--ty)) scale(.7);
+  }
+}
+
+/* ================= OVERLAY ================= */
+
 #overlay{
   position:absolute;
   inset:0;
-  background:rgba(0,0,0,.78);
+  background:rgba(0,0,0,.85);
   display:none;
-  align-items:center;
   justify-content:center;
+  align-items:center;
+  z-index:1000;
 }
+
 #endCard{
   width:700px;
-  padding:28px;
-  border-radius:2px;
+  background:#111;
+  padding:30px;
+  border:2px solid rgba(255,255,255,.1);
 }
+
 button{
-  background:#5f4530;
-  color:#eee;
-  border:none;
+  margin-top:20px;
   padding:12px 18px;
-  border-radius:0px;
+  border:none;
+  background:#ffbf52;
+  color:black;
   cursor:pointer;
+  font-weight:bold;
 }
-button:hover{background:#7a5b3f}
-.small{font-size:12px;color:#9f907b}
+
 </style>
 </head>
 <body>
+
 <div id="game">
 
-<div id="toast"></div>
-
-<div id="p1" class="player panel"></div>
-<div id="p2" class="player panel"></div>
-
+<div id="lightGlow"></div>
 <div id="lamp"></div>
-<div id="center">
-  <div id="chamber">6/6</div>
-  <div id="gun"><img src="https://cdn.creazilla.com/cliparts/3868192/power-drill-clipart-md.png"></div>
+
+<div id="topBar">
+  <div id="roundCounter"></div>
   <div id="turnLabel"></div>
 </div>
 
-<div id="log" class="panel"></div>
-<div id="controls" class="panel">
-<b>Controls</b><br><br>
-1 - Change Player 1 portrait<br>
-2 - Change Player 2 portrait<br>
-C - Toggle controls<br>
-P - Toggle log<br><br>
-Click portraits to shoot.<br>
-Click items to use them.
+<div id="players">
+  <div id="p1" class="player"></div>
+
+  <div id="center">
+    <div id="gun">🔫</div>
+  </div>
+
+  <div id="p2" class="player"></div>
 </div>
 
+<div id="ammoBar"></div>
+
 <div id="overlay">
-  <div id="endCard" class="panel"></div>
+  <div id="endCard"></div>
 </div>
 
 </div>
 
 <script>
-const portraits=["🕴️","🤠","😈","🃏","💀","🎩","🪖","👤"];
 
-const ROUND_TYPES=[
-  "LIVE","LIVE","BLANK","FIRE","BLANK","REVIVE"
+const MAX_ROUNDS = 8;
+
+const ROUND_TYPES = [
+  "LIVE",
+  "LIVE",
+  "BLANK",
+  "BLANK",
+  "FIRE",
+  "LIVE"
 ];
 
-const RELOADS_PER_MATCH=5;
-
-const ITEMS=[
-  {name:"Healing",rarity:.35},
-  {name:"Skip Turn",rarity:.2},
-  {name:"Inspect",rarity:.18},
-  {name:"Randomizer",rarity:.15},
-  {name:"Extra Round",rarity:.06}
+const ITEM_POOL = [
+  "Heal",
+  "Inspect",
+  "Skip",
+  "Shuffle",
+  "Revive"
 ];
 
-const game={
-  roundLimit:5,
-  roundNumber:1,
+const players = [
+  makePlayer("Player 1","🤠"),
+  makePlayer("Player 2","😈")
+];
+
+function makePlayer(name,portrait){
+  return {
+    name,
+    portrait,
+    lives:5,
+    inventory:[],
+    dead:false,
+    extraShot:false,
+    shotThisTurn:false
+  };
+}
+
+const game = {
+  round:1,
   chamber:[],
   current:0,
-  reloadsLeft:RELOADS_PER_MATCH,
   active:0,
-  bonus:false,
-  inspection:null,
-  turnBlocked:[false,false],
-  log:[]
+  ended:false
 };
 
-const stats=[
-  {shots:0,self:0,items:0,damage:0,bonus:0},
-  {shots:0,self:0,items:0,damage:0,bonus:0}
-];
+reloadChamber();
 
-const players=[
-  makePlayer("Player 1",0),
-  makePlayer("Player 2",1)
-];
-
-function makePlayer(name,i){
-  return {
-    id:i,
-    name,
-    portrait:portraits[i],
-    lives:3,
-    exp:0,
-    effects:[],
-    skips:0
-  }
+function reloadChamber(){
+  game.chamber = [...ROUND_TYPES].sort(()=>Math.random()-.5);
+  game.current = 0;
 }
-
-const inventories=[[],[]];
-
-function tier(exp){
-  if(exp>=90)return "Mythic";
-  if(exp>=75)return "Veteran";
-  if(exp>=50)return "Specialist";
-  if(exp>=25)return "Sharpshooter";
-  return "Rookie";
-}
-
-function refill(){
-  game.chamber=[...ROUND_TYPES].sort(()=>Math.random()-.5);
-  game.current=0;
-}
-refill();
 
 function render(){
-  players.forEach((p,i)=>{
-    const el=document.getElementById(i?"p2":"p1");
-    el.className="player panel"+(game.active===i?" active":"");
-    el.innerHTML=`
-      <div class="name" onclick="renamePlayer(${i})">${p.name}</div>
-      <div class="small">${tier(p.exp)}</div>
-      <div class="portrait">${p.portrait}</div>
-      <div class="stat">Lives: ${"♥".repeat(p.lives)} <span class="life">${p.lives}</span></div>
-      <div class="stat">EXP: ${p.exp}/100</div>
-      <div class="expbar"><div class="expfill" style="width:${p.exp}%"></div></div>
-      <div class="effects">${p.effects.join(" • ")}</div>
-      <div class="inventory">
-        ${[0,1,2].map(s=>`
-          <div class="slot" onclick="event.stopPropagation();useItem(${i},${s})">
-            ${inventories[i][s]||"Empty"}
-          </div>`).join("")}
+
+  document.getElementById("roundCounter").innerHTML =
+    `ROUND ${game.round} / ${MAX_ROUNDS}`;
+
+  document.getElementById("turnLabel").innerHTML =
+    `${players[game.active].name}'s turn`;
+
+  renderPlayer(0);
+  renderPlayer(1);
+  renderAmmo();
+  updateShadows();
+}
+
+function renderPlayer(i){
+
+  const p = players[i];
+  const el = document.getElementById(i ? "p2" : "p1");
+
+  el.className =
+    "player " + (game.active === i ? "active" : "inactive");
+
+  el.innerHTML = `
+    <div class="shadow"></div>
+
+    <div class="name">${p.name}</div>
+
+    <div class="portrait">${p.portrait}</div>
+
+    <div class="stats">
+
+      <div class="statBox">
+        <div>Lives</div>
+        <h2>${p.lives}</h2>
       </div>
-    `;
 
-    if(game.active===i){
-      el.classList.add("target");
-      el.onclick=()=>shoot(i);
-    }else{
-      el.classList.add("target");
-      el.onclick=()=>shoot(i);
+      <div class="statBox">
+        <div>Inventory</div>
+        <h2>${p.inventory.length}/3</h2>
+      </div>
+
+    </div>
+
+    <div class="inventory">
+      ${[0,1,2].map(slot=>{
+
+        const item = p.inventory[slot];
+
+        return `
+          <div class="slot"
+            onclick="event.stopPropagation();useItem(${i},${slot})">
+            ${item || "Empty"}
+          </div>
+        `;
+
+      }).join("")}
+    </div>
+  `;
+
+  /* NAME CHANGE */
+  el.querySelector(".name").onclick = (e)=>{
+    e.stopPropagation();
+
+    const n = prompt("Rename player",p.name);
+
+    if(n && n.trim()){
+      p.name = n.trim();
+      render();
     }
-  });
+  };
 
-  document.getElementById("chamber").textContent=`${6-game.current}/6 • Reloads ${game.reloadsLeft}/${RELOADS_PER_MATCH}`;
-  document.getElementById("turnLabel").textContent=`${players[game.active].name}'s Turn`;
-
-  const log=document.getElementById("log");
-  log.innerHTML=game.log.slice(-25).reverse().map(l=>`<div class='logEntry'>${l}</div>`).join("");
+  /* SHOOT */
+  el.onclick = ()=>shoot(i);
 }
 
-function toast(msg){
-  const t=document.getElementById("toast");
-  t.textContent=msg;
-  t.style.opacity=1;
-  clearTimeout(t._timer);
-  t._timer=setTimeout(()=>t.style.opacity=0,3000);
-}
+function renderAmmo(){
 
-function addLog(msg){
-  game.log.push(msg);
-  toast(msg);
-  render();
-}
+  const ammo = document.getElementById("ammoBar");
 
-function renamePlayer(i){
-  const n=prompt("Enter new name",players[i].name);
-  if(n)players[i].name=n;
-  render();
+  ammo.innerHTML = "";
+
+  for(let i=game.current;i<game.chamber.length;i++){
+
+    const div = document.createElement("div");
+
+    div.className = "bullet";
+
+    const r = game.chamber[i];
+
+    if(r === "LIVE") div.classList.add("live");
+    if(r === "BLANK") div.classList.add("blank");
+    if(r === "FIRE") div.classList.add("fire");
+
+    ammo.appendChild(div);
+  }
 }
 
 function shoot(targetIndex){
-  const shooter=players[game.active];
-  const target=players[targetIndex];
 
-  stats[game.active].shots++;
-  if(targetIndex===game.active)stats[game.active].self++;
+  if(game.ended) return;
 
-  if(game.current>=game.chamber.length){
-    if(game.reloadsLeft>0){
-      game.reloadsLeft--;
-      refill();
-      addLog('The revolver reloads.');
-    }
+  const shooter = players[game.active];
+  const target = players[targetIndex];
+
+  /* only one shot */
+  if(shooter.shotThisTurn) return;
+
+  shooter.shotThisTurn = true;
+
+  if(game.current >= game.chamber.length){
+    reloadChamber();
   }
 
-  const round=game.chamber[game.current++];
+  const round = game.chamber[game.current++];
+  const selfShot = targetIndex === game.active;
 
-  if(round==="LIVE"){
-    target.lives=Math.max(0,target.lives-1);
-    target.exp=Math.max(0,target.exp-15);
-    stats[game.active].damage++;
-    effect(targetIndex,"LIVE HIT");
-    addLog(`${shooter.name} fires LIVE at ${target.name}.`);
-  }
+  if(round === "LIVE"){
 
-  if(round==="BLANK"){
-    effect(targetIndex,"BLANK");
-    addLog(`${shooter.name} fires a BLANK.`);
+    target.lives -= 1;
+    flash(targetIndex,"hit-red");
 
-    if(targetIndex===game.active && !game.bonus){
-      shooter.exp=Math.min(100,shooter.exp+18);
-      game.bonus=true;
-      stats[game.active].bonus++;
-      addLog(`${shooter.name} survives the self-shot and gains a bonus shot.`);
+  }else if(round === "FIRE"){
+
+    target.lives -= 2;
+    flash(targetIndex,"hit-orange");
+
+  }else{
+
+    flash(targetIndex,"hit-blue");
+
+    /* ONLY ONE EXTRA SHOT AFTER SELF BLANK */
+    if(selfShot && !shooter.extraShot){
+
+      shooter.extraShot = true;
+      shooter.shotThisTurn = false;
+
       render();
       checkEnd();
       return;
     }
   }
 
-  if(round==="FIRE"){
-    target.lives=Math.max(0,target.lives-1);
-    target.exp=Math.max(0,target.exp-25);
-    stats[game.active].damage++;
-    effect(targetIndex,"FIRE");
-    addLog(`${shooter.name} unleashes a FIRE round at ${target.name}.`);
+  if(target.lives <= 0){
+    target.dead = true;
   }
 
-  if(round==="REVIVE"){
-    target.lives=Math.min(3,target.lives+1);
-    target.exp=Math.min(100,target.exp+10);
-    effect(targetIndex,"REVIVE");
-    addLog(`${target.name} is revived by the chamber.`);
-  }
+  afterShot();
+}
 
-  if(game.current>=game.chamber.length){
-    if(game.reloadsLeft>0){
-      game.reloadsLeft--;
-      refill();
-      addLog('The revolver reloads.');
+function afterShot(){
+
+  const p = players[game.active];
+
+  /* PASS TURN */
+  p.extraShot = false;
+  p.shotThisTurn = false;
+
+  game.active = 1 - game.active;
+
+  /* round progression */
+  if(game.active === 0){
+
+    game.round++;
+
+    if(game.round > 1){
+      giveItems();
     }
   }
 
-  rewardPhase();
-
-  if(game.bonus){
-    game.bonus=false;
-  }else{
-    nextTurn();
-  }
-
-  checkEnd();
   render();
-}
-
-function nextTurn(){
-  game.active=1-game.active;
-
-  if(game.turnBlocked[game.active]){
-    addLog(`${players[game.active].name}'s turn was skipped.`);
-    game.turnBlocked[game.active]=false;
-    game.active=1-game.active;
-  }
-
-  game.roundNumber++;
-}
-
-function rewardPhase(){
-  players.forEach((p,i)=>{
-    if(inventories[i].length>=3)return;
-
-    const roll=Math.random();
-
-    if(roll<0.45){
-      addLog(`${p.name} found nothing.`);
-      return;
-    }
-
-    const item=weightedItem();
-    inventories[i].push(item);
-    addLog(`${p.name} found ${item}.`);
-  });
-}
-
-function weightedItem(){
-  const r=Math.random();
-
-  if(r<.35)return "Healing";
-  if(r<.58)return "Skip Turn";
-  if(r<.78)return "Inspect";
-  if(r<.94)return "Randomizer";
-  return "Extra Round";
+  checkEnd();
 }
 
 function useItem(playerIndex,slot){
-  if(playerIndex!==game.active)return;
 
-  const p=players[playerIndex];
-  const item=inventories[playerIndex][slot];
-  if(!item)return;
+  if(playerIndex !== game.active) return;
 
-  inventories[playerIndex].splice(slot,1);
-  stats[playerIndex].items++;
+  const p = players[playerIndex];
+  const item = p.inventory[slot];
 
-  if(item==="Healing"){
-    p.lives=Math.min(3,p.lives+1);
-    p.exp=Math.min(100,p.exp+12);
-    effect(playerIndex,"HEALING");
-    addLog(`${p.name} used Healing.`);
+  if(!item) return;
+
+  p.inventory.splice(slot,1);
+
+  if(item === "Heal"){
+    p.lives++;
+    flash(playerIndex,"hit-green");
   }
 
-  if(item==="Skip Turn"){
-    game.turnBlocked[1-playerIndex]=true;
-    effect(1-playerIndex,"SKIPPED TURN");
-    addLog(`${players[1-playerIndex].name} will lose their next turn.`);
+  if(item === "Inspect"){
+    alert("Next round: " + game.chamber[game.current]);
   }
 
-  if(item==="Inspect"){
-    const next=game.chamber[game.current];
-    addLog(`The next round is ${next}.`);
+  if(item === "Skip"){
+    game.active = playerIndex;
   }
 
-  if(item==="Randomizer"){
-    const remain=game.chamber.slice(game.current).sort(()=>Math.random()-.5);
-    game.chamber=[...game.chamber.slice(0,game.current),...remain];
-    addLog(`${p.name} shuffled the chamber.`);
+  if(item === "Shuffle"){
+    reloadChamber();
   }
 
-  if(item==="Extra Round"){
-    game.roundLimit++;
-    addLog(`${p.name} extended the match.`);
+  if(item === "Revive"){
+    if(p.lives <= 0){
+      p.lives = 2;
+      p.dead = false;
+      flash(playerIndex,"hit-green");
+    }
   }
 
   render();
 }
 
-function effect(i,text){
-  players[i].effects=[text];
-  setTimeout(()=>{
-    players[i].effects=[];
-    render();
-  },2000);
+function giveItems(){
 
-  const el=document.getElementById(i?"p2":"p1");
-  el.classList.add("flash");
-  setTimeout(()=>el.classList.remove("flash"),400);
+  players.forEach((p,i)=>{
+
+    if(p.inventory.length >= 3) return;
+
+    if(Math.random() < .75){
+
+      const item =
+        ITEM_POOL[Math.floor(Math.random()*ITEM_POOL.length)];
+
+      p.inventory.push(item);
+
+      animateItem(item,i);
+    }
+  });
+}
+
+function animateItem(item,playerIndex){
+
+  const div = document.createElement("div");
+
+  div.className = "floatItem";
+  div.innerHTML = item;
+
+  const tx = playerIndex === 0 ? "-500px" : "500px";
+  const ty = "-350px";
+
+  div.style.setProperty("--tx",tx);
+  div.style.setProperty("--ty",ty);
+
+  document.body.appendChild(div);
+
+  setTimeout(()=>div.remove(),1500);
+}
+
+function flash(i,className){
+
+  const el = document.getElementById(i ? "p2" : "p1");
+
+  el.classList.add(className);
+
+  setTimeout(()=>{
+    el.classList.remove(className);
+  },800);
 }
 
 function checkEnd(){
-  const dead=players.find(p=>p.lives<=0);
 
-  if(dead || game.roundNumber>game.roundLimit){
-    endGame();
+  /* ONLY END IF SOMEONE IS DEAD OR ALL ROUNDS OVER */
+
+  const deadPlayer = players.find(p=>p.lives <= 0);
+
+  if(deadPlayer || game.round > MAX_ROUNDS){
+
+    game.ended = true;
+
+    let winner = "DRAW";
+
+    if(players[0].lives > players[1].lives){
+      winner = players[0].name;
+    }
+
+    if(players[1].lives > players[0].lives){
+      winner = players[1].name;
+    }
+
+    document.getElementById("overlay").style.display = "flex";
+
+    document.getElementById("endCard").innerHTML = `
+      <h1>${winner} WINS</h1>
+      <br>
+
+      <h2>${players[0].name}: ${players[0].lives} HP</h2>
+      <h2>${players[1].name}: ${players[1].lives} HP</h2>
+
+      <button onclick="location.reload()">
+        Play Again
+      </button>
+    `;
   }
 }
 
-function endGame(){
-  let winner="Draw";
+/* ================= REAL SHADOWS ================= */
 
-  if(players[0].lives>players[1].lives)winner=players[0].name;
-  else if(players[1].lives>players[0].lives)winner=players[1].name;
+function updateShadows(){
 
-  const card=document.getElementById("endCard");
+  const light = document.getElementById("lightGlow");
+  const lightRect = light.getBoundingClientRect();
 
-  card.innerHTML=`
-    <h1>${winner==='Draw'?'Draw':winner+' Wins'}</h1>
-    <hr>
-    ${players.map((p,i)=>`
-      <h2>${p.name}</h2>
-      Lives: ${p.lives}<br>
-      EXP: ${p.exp}<br>
-      Shots Taken: ${stats[i].shots}<br>
-      Self Shots: ${stats[i].self}<br>
-      Bonus Shots: ${stats[i].bonus}<br>
-      Items Used: ${stats[i].items}<br>
-      Damage Dealt: ${stats[i].damage}<br><br>
-    `).join("")}
-    <button onclick="location.reload()">Play Again</button>
-  `;
+  const lx = lightRect.left + lightRect.width/2;
+  const ly = lightRect.top + lightRect.height/2;
 
-  document.getElementById("overlay").style.display="flex";
+  document.querySelectorAll(".player").forEach(player=>{
+
+    const shadow = player.querySelector(".shadow");
+    const rect = player.getBoundingClientRect();
+
+    const px = rect.left + rect.width/2;
+    const py = rect.top + rect.height/2;
+
+    const dx = px - lx;
+    const dy = py - ly;
+
+    shadow.style.transform =
+      `translate(${dx*.12}px, ${dy*.12}px) skew(${-dx*.01}deg)`;
+
+  });
 }
 
-window.addEventListener("mousemove",e=>{
-  const gun=document.getElementById("gun");
-  const left=e.clientX<window.innerWidth/2;
-  gun.style.transform=left?'scaleX(-1)':'scaleX(1)';
+/* ================= LIGHT FOLLOW ================= */
+
+window.addEventListener("mousemove",(e)=>{
+
+  const glow = document.getElementById("lightGlow");
+
+  glow.style.left = (e.clientX - 350) + "px";
+  glow.style.top = (e.clientY - 350) + "px";
+
+  updateShadows();
 });
 
-window.addEventListener("keydown",e=>{
-  if(e.key==='1'){
-    cyclePortrait(0);
-  }
-  if(e.key==='2'){
-    cyclePortrait(1);
-  }
-  if(e.key.toLowerCase()==='p'){
-    toggle('log');
-  }
-  if(e.key.toLowerCase()==='c'){
-    toggle('controls');
-  }
-});
-
-function toggle(id){
-  const el=document.getElementById(id);
-  el.style.display=el.style.display==='block'?'none':'block';
-}
-
-function cyclePortrait(i){
-  const p=players[i];
-  const idx=portraits.indexOf(p.portrait);
-  p.portrait=portraits[(idx+1)%portraits.length];
-  render();
-}
+/* ================= START ================= */
 
 render();
-addLog('Rogue Roulette begins.');
+
 </script>
 </body>
 </html>
