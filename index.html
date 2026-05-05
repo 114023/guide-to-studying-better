@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,15 +15,18 @@ body{
   color:#ddd;
 }
 #game{
+  perspective:1200px;
   width:100vw;
   height:100vh;
   position:relative;
 }
 .panel{
-  background:rgba(40,33,28,.55);
+  background:rgba(30,26,23,.78);
   border:1px solid rgba(255,255,255,.08);
   backdrop-filter:blur(6px);
-  box-shadow:0 0 20px rgba(0,0,0,.45);
+  box-shadow:
+  0 30px 60px rgba(0,0,0,.6),
+  0 5px 18px rgba(0,0,0,.9);
 }
 .player{
   position:absolute;
@@ -32,7 +34,7 @@ body{
   width:280px;
   transform:translateY(-50%);
   padding:18px;
-  border-radius:18px;
+  border-radius:4px;
   transition:.2s;
 }
 .player:hover{transform:translateY(-50%) scale(1.02)}
@@ -66,10 +68,9 @@ body{
 }
 .slot{
   flex:1;
-  height:52px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(0,0,0,.25);
+  aspect-ratio:1/1;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.45);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -78,6 +79,7 @@ body{
   padding:4px;
   cursor:pointer;
   transition:.2s;
+  box-shadow:0 10px 25px rgba(0,0,0,.6);
 }
 .slot:hover{background:rgba(255,255,255,.06)}
 #center{
@@ -94,10 +96,50 @@ body{
 }
 #gun{
   position:absolute;
-  font-size:120px;
-  transition:transform .08s linear;
-  filter:drop-shadow(0 0 20px rgba(0,0,0,.8));
+  width:220px;
+  transition:transform .2s ease;
+  filter:drop-shadow(0 18px 16px rgba(0,0,0,.85));
   user-select:none;
+  transform-origin:center center;
+}
+#gun img{
+  width:100%;
+  pointer-events:none;
+}
+#lamp{
+  position:absolute;
+  top:-40px;
+  left:50%;
+  width:10px;
+  height:220px;
+  transform-origin:top center;
+  animation:swing 5s ease-in-out infinite alternate;
+}
+#lamp::before{
+  content:'';
+  position:absolute;
+  width:4px;
+  height:170px;
+  background:#1f1a17;
+  left:3px;
+}
+#lamp::after{
+  content:'';
+  position:absolute;
+  bottom:0;
+  left:-28px;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:radial-gradient(circle,#f0c67a 0%,#7f6137 30%,#261d14 70%);
+  box-shadow:
+    0 0 120px rgba(255,205,120,.45),
+    0 0 240px rgba(255,205,120,.2);
+}
+@keyframes swing{
+  from{transform:rotate(-10deg)}
+  to{transform:rotate(10deg)}
+}
 }
 #chamber{
   position:absolute;
@@ -118,7 +160,7 @@ body{
   left:50%;
   transform:translateX(-50%);
   padding:14px 22px;
-  border-radius:12px;
+  border-radius:2px;
   background:rgba(0,0,0,.7);
   opacity:0;
   transition:.35s;
@@ -131,7 +173,7 @@ body{
   max-height:250px;
   overflow:auto;
   padding:14px;
-  border-radius:16px;
+  border-radius:2px;
   font-size:13px;
 }
 #log{left:20px;display:none}
@@ -170,14 +212,14 @@ body{
 #endCard{
   width:700px;
   padding:28px;
-  border-radius:20px;
+  border-radius:2px;
 }
 button{
   background:#5f4530;
   color:#eee;
   border:none;
   padding:12px 18px;
-  border-radius:10px;
+  border-radius:0px;
   cursor:pointer;
 }
 button:hover{background:#7a5b3f}
@@ -192,9 +234,10 @@ button:hover{background:#7a5b3f}
 <div id="p1" class="player panel"></div>
 <div id="p2" class="player panel"></div>
 
+<div id="lamp"></div>
 <div id="center">
   <div id="chamber">6/6</div>
-  <div id="gun">🔫</div>
+  <div id="gun"><img src="https://cdn.creazilla.com/cliparts/3868192/power-drill-clipart-md.png"></div>
   <div id="turnLabel"></div>
 </div>
 
@@ -222,6 +265,8 @@ const ROUND_TYPES=[
   "LIVE","LIVE","BLANK","FIRE","BLANK","REVIVE"
 ];
 
+const RELOADS_PER_MATCH=5;
+
 const ITEMS=[
   {name:"Healing",rarity:.35},
   {name:"Skip Turn",rarity:.2},
@@ -235,6 +280,7 @@ const game={
   roundNumber:1,
   chamber:[],
   current:0,
+  reloadsLeft:RELOADS_PER_MATCH,
   active:0,
   bonus:false,
   inspection:null,
@@ -259,11 +305,12 @@ function makePlayer(name,i){
     portrait:portraits[i],
     lives:3,
     exp:0,
-    inventory:[],
     effects:[],
     skips:0
   }
 }
+
+const inventories=[[],[]];
 
 function tier(exp){
   if(exp>=90)return "Mythic";
@@ -293,8 +340,8 @@ function render(){
       <div class="effects">${p.effects.join(" • ")}</div>
       <div class="inventory">
         ${[0,1,2].map(s=>`
-          <div class="slot" onclick="useItem(${i},${s})">
-            ${p.inventory[s]||"Empty"}
+          <div class="slot" onclick="event.stopPropagation();useItem(${i},${s})">
+            ${inventories[i][s]||"Empty"}
           </div>`).join("")}
       </div>
     `;
@@ -308,7 +355,7 @@ function render(){
     }
   });
 
-  document.getElementById("chamber").textContent=`${6-game.current}/6`;
+  document.getElementById("chamber").textContent=`${6-game.current}/6 • Reloads ${game.reloadsLeft}/${RELOADS_PER_MATCH}`;
   document.getElementById("turnLabel").textContent=`${players[game.active].name}'s Turn`;
 
   const log=document.getElementById("log");
@@ -342,7 +389,13 @@ function shoot(targetIndex){
   stats[game.active].shots++;
   if(targetIndex===game.active)stats[game.active].self++;
 
-  if(game.current>=game.chamber.length)refill();
+  if(game.current>=game.chamber.length){
+    if(game.reloadsLeft>0){
+      game.reloadsLeft--;
+      refill();
+      addLog('The revolver reloads.');
+    }
+  }
 
   const round=game.chamber[game.current++];
 
@@ -384,7 +437,13 @@ function shoot(targetIndex){
     addLog(`${target.name} is revived by the chamber.`);
   }
 
-  if(game.current>=game.chamber.length)refill();
+  if(game.current>=game.chamber.length){
+    if(game.reloadsLeft>0){
+      game.reloadsLeft--;
+      refill();
+      addLog('The revolver reloads.');
+    }
+  }
 
   rewardPhase();
 
@@ -412,7 +471,7 @@ function nextTurn(){
 
 function rewardPhase(){
   players.forEach((p,i)=>{
-    if(p.inventory.length>=3)return;
+    if(inventories[i].length>=3)return;
 
     const roll=Math.random();
 
@@ -422,7 +481,7 @@ function rewardPhase(){
     }
 
     const item=weightedItem();
-    p.inventory.push(item);
+    inventories[i].push(item);
     addLog(`${p.name} found ${item}.`);
   });
 }
@@ -441,10 +500,10 @@ function useItem(playerIndex,slot){
   if(playerIndex!==game.active)return;
 
   const p=players[playerIndex];
-  const item=p.inventory[slot];
+  const item=inventories[playerIndex][slot];
   if(!item)return;
 
-  p.inventory.splice(slot,1);
+  inventories[playerIndex].splice(slot,1);
   stats[playerIndex].items++;
 
   if(item==="Healing"){
@@ -528,17 +587,8 @@ function endGame(){
 
 window.addEventListener("mousemove",e=>{
   const gun=document.getElementById("gun");
-  const cx=window.innerWidth/2;
-  const cy=window.innerHeight/2;
-
-  const dx=e.clientX-cx;
-  const dy=e.clientY-cy;
-
-  let angle=Math.atan2(dy,dx)*180/Math.PI;
-
-  const flip=Math.abs(angle)>90;
-
-  gun.style.transform=`rotate(${angle}deg) scaleY(${flip?-1:1})`;
+  const left=e.clientX<window.innerWidth/2;
+  gun.style.transform=left?'scaleX(-1)':'scaleX(1)';
 });
 
 window.addEventListener("keydown",e=>{
