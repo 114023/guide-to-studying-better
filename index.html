@@ -2,781 +2,1200 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rogue Roulette</title>
-
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+  :root{
+    --bg:#120d0a;
+    --panel:rgba(23,18,15,.82);
+    --panel2:rgba(34,28,22,.88);
+    --text:#e7dcc8;
+    --muted:#aa9a82;
+    --yellow:#f0d35d;
+    --gray:#8a8a8a;
+    --red:#ff5a5a;
+    --blue:#57a8ff;
+    --orange:#ff9c45;
+    --green:#63d46e;
+  }
 
-body{
-  overflow:hidden;
-  font-family:Georgia, serif;
-  background:
-    linear-gradient(rgba(0,0,0,.82),rgba(0,0,0,.82)),
-    url("https://static.vecteezy.com/system/resources/thumbnails/007/995/476/small/brick-wall-background-seamless-texture-pattern-illustration-free-vector.jpg");
-  background-size:300px;
-  color:white;
-}
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Georgia,serif;
+    color:var(--text);
+    background:var(--bg);
+  }
 
-#game{
-  width:100vw;
-  height:100vh;
-  position:relative;
-  overflow:hidden;
-}
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(10,7,6,.78), rgba(10,7,6,.86)),
+      url("https://static.vecteezy.com/system/resources/thumbnails/007/995/476/small/brick-wall-background-seamless-texture-pattern-illustration-free-vector.jpg");
+    background-size:260px auto;
+    background-repeat:repeat;
+    opacity:.95;
+    pointer-events:none;
+    z-index:0;
+  }
 
-/* ================= LIGHT ================= */
+  #shadowCanvas{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
 
-#lightGlow{
-  position:absolute;
-  width:700px;
-  height:700px;
-  border-radius:50%;
-  pointer-events:none;
-  background:
-    radial-gradient(circle,
-      rgba(255,220,140,.30) 0%,
-      rgba(255,190,90,.15) 25%,
-      rgba(255,170,60,.06) 45%,
-      transparent 70%);
-  z-index:0;
-  mix-blend-mode:screen;
-}
+  #world{
+    position:relative;
+    z-index:2;
+    width:100vw;
+    height:100vh;
+    perspective:1200px;
+  }
 
-#lamp{
-  position:absolute;
-  top:-10px;
-  left:50%;
-  width:120px;
-  height:220px;
-  transform-origin:top center;
-  animation:swing 4s ease-in-out infinite alternate;
-  z-index:1;
-}
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 26px 60px rgba(0,0,0,.55);
+    backdrop-filter:blur(6px);
+    border-radius:8px;
+  }
 
-#lamp::before{
-  content:'';
-  position:absolute;
-  width:5px;
-  height:170px;
-  background:#111;
-  left:58px;
-}
+  #roundsTop{
+    position:absolute;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:10px 18px;
+    font-size:20px;
+    letter-spacing:1px;
+    color:#f1e3c4;
+    background:rgba(0,0,0,.25);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:999px;
+    z-index:3;
+  }
 
-#lamp::after{
-  content:'';
-  position:absolute;
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle,#fff4c2 0%,#ffc45c 35%,#663c10 100%);
-  bottom:0;
-  left:20px;
-}
+  .player{
+    position:absolute;
+    top:50%;
+    width:min(310px, 30vw);
+    transform:translateY(-50%);
+    padding:16px;
+    transition:transform .2s ease, opacity .2s ease, box-shadow .2s ease, filter .2s ease, border-color .2s ease;
+    user-select:none;
+    z-index:3;
+  }
+  .player:hover{transform:translateY(-50%) scale(1.02)}
+  .player.active{
+    border:1px solid rgba(240,211,93,.95);
+    box-shadow:
+      0 0 0 2px rgba(240,211,93,.12),
+      0 0 35px rgba(240,211,93,.22),
+      0 26px 60px rgba(0,0,0,.55);
+  }
+  .player.inactive{
+    opacity:.72;
+    filter:saturate(.75) grayscale(.25);
+  }
 
-@keyframes swing{
-  from{transform:rotate(-12deg);}
-  to{transform:rotate(12deg);}
-}
+  #p1{left:24px}
+  #p2{right:24px}
 
-/* ================= TOP INFO ================= */
+  .name{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    font-size:28px;
+    line-height:1.05;
+    cursor:pointer;
+  }
 
-#topBar{
-  position:absolute;
-  top:20px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:10;
-  text-align:center;
-}
+  .nameBtn{
+    all:unset;
+    cursor:pointer;
+    color:inherit;
+    font:inherit;
+    text-align:left;
+    flex:1;
+  }
 
-#roundCounter{
-  font-size:28px;
-  letter-spacing:2px;
-  margin-bottom:8px;
-  color:#ffdd95;
-}
+  .editHint{
+    font-size:11px;
+    color:rgba(255,255,255,.55);
+    white-space:nowrap;
+  }
 
-#turnLabel{
-  font-size:18px;
-  color:#ccc;
-}
+  .small{
+    margin-top:2px;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
 
-/* ================= PLAYERS ================= */
+  .portrait{
+    text-align:center;
+    font-size:108px;
+    line-height:1;
+    margin:10px 0 6px;
+    user-select:none;
+  }
 
-#players{
-  position:absolute;
-  inset:0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 60px;
-  z-index:5;
-}
+  .statRow{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin:8px 0;
+    font-size:14px;
+    color:#dac8ac;
+  }
 
-.player{
-  position:relative;
-  width:340px;
-  background:rgba(20,20,20,.78);
-  border:2px solid rgba(255,255,255,.08);
-  backdrop-filter:blur(8px);
-  padding:18px;
-  transition:.25s;
-  overflow:visible;
-}
+  .expbar{
+    width:100%;
+    height:10px;
+    background:#1a1512;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:6px;
+    border:1px solid rgba(255,255,255,.05);
+  }
 
-.player.active{
-  border-color:#ffd84a;
-  box-shadow:
-    0 0 25px rgba(255,220,90,.55),
-    inset 0 0 15px rgba(255,220,90,.12);
-}
+  .expfill{
+    height:100%;
+    background:linear-gradient(to right,#7c5a36,#d0a56d);
+    border-radius:999px;
+  }
 
-.player.inactive{
-  filter:grayscale(.75) brightness(.75);
-}
+  .effects{
+    min-height:22px;
+    margin-top:8px;
+    font-size:13px;
+    color:#f1d8a6;
+  }
 
-.shadow{
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  pointer-events:none;
-  opacity:.45;
-  filter:blur(8px);
-  background:black;
-  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
-}
+  .inventoryWrap{
+    margin-top:12px;
+    padding:10px;
+    border-radius:8px;
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.06);
+  }
 
-.name{
-  font-size:30px;
-  margin-bottom:8px;
-  cursor:pointer;
-  user-select:none;
-}
+  .invLabel{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
 
-.portrait{
-  font-size:110px;
-  text-align:center;
-  margin:10px 0;
-}
+  .inventory{
+    display:flex;
+    gap:8px;
+  }
 
-.stats{
-  display:flex;
-  justify-content:space-between;
-  margin-top:10px;
-  gap:10px;
-}
+  .slot{
+    flex:1;
+    min-height:72px;
+    border:1px solid rgba(255,255,255,.15);
+    background:rgba(0,0,0,.42);
+    border-radius:8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:6px;
+    transition:.2s;
+    box-shadow:0 10px 20px rgba(0,0,0,.35);
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+  }
 
-.statBox{
-  flex:1;
-  background:rgba(255,255,255,.05);
-  padding:10px;
-  text-align:center;
-}
+  .slot:hover{background:rgba(255,255,255,.06)}
 
-.inventory{
-  display:flex;
-  gap:8px;
-  margin-top:14px;
-}
+  .slot .icon{
+    font-size:21px;
+    line-height:1;
+    margin-bottom:3px;
+  }
+  .slot .label{
+    font-size:10px;
+    color:#d5c2a1;
+    line-height:1.1;
+  }
 
-.slot{
-  flex:1;
-  min-height:60px;
-  background:rgba(0,0,0,.45);
-  border:1px solid rgba(255,255,255,.1);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:6px;
-  cursor:pointer;
-  transition:.2s;
-  font-size:12px;
-}
+  .inactive .inventoryWrap{
+    opacity:.55;
+  }
+  .inactive .slot{
+    filter:grayscale(1);
+    opacity:.32;
+    pointer-events:none;
+  }
 
-.slot:hover{
-  background:rgba(255,255,255,.08);
-}
+  #center{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    height:360px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:3;
+    pointer-events:none;
+  }
 
-/* ================= CENTER ================= */
+  #lightOrb{
+    position:absolute;
+    width:560px;
+    height:560px;
+    border-radius:50%;
+    background:radial-gradient(circle,
+      rgba(255,220,160,.22) 0%,
+      rgba(255,205,130,.12) 18%,
+      rgba(255,205,130,.06) 34%,
+      rgba(255,205,130,0) 62%);
+    filter:blur(8px);
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    z-index:1;
+    mix-blend-mode:screen;
+  }
 
-#center{
-  position:absolute;
-  left:50%;
-  top:52%;
-  transform:translate(-50%,-50%);
-  z-index:8;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
+  #gun{
+    font-size:120px;
+    line-height:1;
+    transform-origin:center center;
+    transition:transform .12s ease;
+    filter:drop-shadow(0 10px 14px rgba(0,0,0,.55));
+    user-select:none;
+  }
 
-#gun{
-  font-size:180px;
-  transition:.2s;
-  user-select:none;
-}
+  #turnLabel{
+    margin-top:8px;
+    font-size:18px;
+    color:#dfcba8;
+    text-shadow:0 2px 0 rgba(0,0,0,.55);
+  }
 
-/* ================= AMMO ================= */
+  #comparison{
+    position:absolute;
+    left:50%;
+    bottom:115px;
+    transform:translateX(-50%);
+    width:min(760px, calc(100vw - 32px));
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    z-index:3;
+  }
 
-#ammoBar{
-  position:absolute;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:10px;
-  z-index:10;
-}
+  .compareCard{
+    padding:14px 16px;
+    background:rgba(0,0,0,.24);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    backdrop-filter:blur(6px);
+  }
 
-.bullet{
-  width:28px;
-  height:54px;
-  border-radius:8px 8px 4px 4px;
-  background:linear-gradient(to bottom,#ffd067 0%,#8f5b1f 100%);
-  border:2px solid rgba(0,0,0,.4);
-  opacity:.25;
-}
+  .compareTitle{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    font-size:16px;
+    margin-bottom:10px;
+  }
 
-.bullet.live{opacity:1;}
-.bullet.blank{
-  background:linear-gradient(to bottom,#cfd2d6,#666);
-  opacity:1;
-}
-.bullet.fire{
-  background:linear-gradient(to bottom,#ffb347,#ff3c00);
-  opacity:1;
-}
+  .compareGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    font-size:13px;
+    color:#e3d4b8;
+  }
+  .compareGrid .k{color:var(--muted)}
+  .compareGrid .v{text-align:right}
 
-/* ================= FX ================= */
+  #ammoBottom{
+    position:absolute;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    min-width:min(760px, calc(100vw - 32px));
+    padding:12px 16px;
+    border-radius:10px;
+    background:rgba(0,0,0,.26);
+    border:1px solid rgba(255,255,255,.08);
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    backdrop-filter:blur(6px);
+  }
 
-.player.hit-red{
-  animation:redGlow .7s;
-}
+  .ammoLabel{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
 
-.player.hit-blue{
-  animation:blueGlow .7s;
-}
+  .ammoRow{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:flex-end;
+    align-items:center;
+    flex:1;
+  }
 
-.player.hit-orange{
-  animation:orangeGlow .9s;
-}
+  .ammoPip{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);
+    box-shadow:0 0 10px rgba(0,0,0,.35);
+  }
+  .ammo-live{background:rgba(255,90,90,.95)}
+  .ammo-blank{background:rgba(87,168,255,.95)}
+  .ammo-fire{background:rgba(255,156,69,.95)}
+  .ammo-empty{
+    width:auto;
+    height:auto;
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:12px;
+  }
 
-.player.hit-green{
-  animation:greenGlow .9s;
-}
-
-@keyframes redGlow{
-  0%{box-shadow:0 0 0 rgba(255,0,0,0);}
-  50%{box-shadow:0 0 50px rgba(255,0,0,.9);}
-  100%{box-shadow:0 0 0 rgba(255,0,0,0);}
-}
-
-@keyframes blueGlow{
-  0%{box-shadow:0 0 0 rgba(80,180,255,0);}
-  50%{box-shadow:0 0 50px rgba(80,180,255,.9);}
-  100%{box-shadow:0 0 0 rgba(80,180,255,0);}
-}
-
-@keyframes orangeGlow{
-  0%{box-shadow:0 0 0 rgba(255,120,0,0);}
-  50%{box-shadow:0 0 60px rgba(255,120,0,1);}
-  100%{box-shadow:0 0 0 rgba(255,120,0,0);}
-}
-
-@keyframes greenGlow{
-  0%{box-shadow:0 0 0 rgba(0,255,120,0);}
-  50%{box-shadow:0 0 60px rgba(0,255,120,1);}
-  100%{box-shadow:0 0 0 rgba(0,255,120,0);}
-}
-
-/* ================= ITEM FLOAT ================= */
-
-.floatItem{
-  position:absolute;
-  bottom:40px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111;
-  border:1px solid rgba(255,255,255,.2);
-  padding:10px 16px;
-  z-index:999;
-  animation:floatToInv 1.5s forwards ease;
-  pointer-events:none;
-}
-
-@keyframes floatToInv{
-  0%{
+  #toast{
+    position:absolute;
+    top:66px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:10px 18px;
+    border-radius:999px;
+    background:rgba(0,0,0,.72);
+    border:1px solid rgba(255,255,255,.08);
     opacity:0;
-    transform:translate(-50%,0) scale(.5);
+    transition:opacity .25s ease;
+    pointer-events:none;
+    z-index:4;
+    max-width:min(92vw, 760px);
+    text-align:center;
   }
-  20%{
-    opacity:1;
+
+  #overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
   }
-  100%{
-    opacity:0;
-    transform:translate(var(--tx),var(--ty)) scale(.7);
+
+  #endCard{
+    width:min(860px, calc(100vw - 28px));
+    padding:24px;
+    border-radius:12px;
+    background:rgba(22,18,15,.95);
   }
-}
 
-/* ================= OVERLAY ================= */
+  .endTitle{
+    margin:0 0 14px;
+    font-size:36px;
+  }
 
-#overlay{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:1000;
-}
+  .endSub{
+    margin:0 0 18px;
+    color:var(--muted);
+  }
 
-#endCard{
-  width:700px;
-  background:#111;
-  padding:30px;
-  border:2px solid rgba(255,255,255,.1);
-}
+  .endCompare{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:8px;
+  }
 
-button{
-  margin-top:20px;
-  padding:12px 18px;
-  border:none;
-  background:#ffbf52;
-  color:black;
-  cursor:pointer;
-  font-weight:bold;
-}
+  .endStatBox{
+    padding:14px;
+    border-radius:10px;
+    background:rgba(0,0,0,.2);
+    border:1px solid rgba(255,255,255,.08);
+  }
 
+  .endStatBox h3{
+    margin:0 0 12px;
+    font-size:20px;
+  }
+
+  .endStatRow{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin:8px 0;
+    font-size:14px;
+  }
+
+  button{
+    background:#6a4e36;
+    color:#f2eadf;
+    border:none;
+    padding:11px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font:inherit;
+  }
+  button:hover{background:#806043}
+
+  .floatingItem{
+    position:fixed;
+    left:0;
+    top:0;
+    z-index:9;
+    pointer-events:none;
+    width:66px;
+    height:66px;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.68);
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 16px 30px rgba(0,0,0,.35);
+    transform:translate(-50%,-50%);
+    backdrop-filter:blur(4px);
+    font-size:30px;
+  }
+
+  .floatingItem .tiny{
+    position:absolute;
+    bottom:5px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:9px;
+    color:#ead7b0;
+    white-space:nowrap;
+  }
+
+  .flash-red{box-shadow:0 0 0 2px rgba(255,90,90,.24), 0 0 36px rgba(255,90,90,.48), 0 26px 60px rgba(0,0,0,.55)}
+  .flash-blue{box-shadow:0 0 0 2px rgba(87,168,255,.24), 0 0 36px rgba(87,168,255,.46), 0 26px 60px rgba(0,0,0,.55)}
+  .flash-orange{box-shadow:0 0 0 2px rgba(255,156,69,.24), 0 0 36px rgba(255,156,69,.46), 0 26px 60px rgba(0,0,0,.55)}
+  .flash-green{box-shadow:0 0 0 2px rgba(99,212,110,.24), 0 0 36px rgba(99,212,110,.46), 0 26px 60px rgba(0,0,0,.55)}
+
+  .controls{
+    position:absolute;
+    right:18px;
+    top:18px;
+    padding:14px;
+    width:250px;
+    display:none;
+    z-index:4;
+  }
+
+  .log{
+    position:absolute;
+    left:18px;
+    bottom:18px;
+    width:300px;
+    max-height:220px;
+    overflow:auto;
+    padding:14px;
+    display:none;
+    z-index:4;
+  }
+
+  .logEntry{
+    margin-bottom:8px;
+    font-size:13px;
+    color:#cfbea0;
+  }
 </style>
 </head>
 <body>
+<canvas id="shadowCanvas"></canvas>
+<div id="lightOrb"></div>
 
-<div id="game">
+<div id="world">
+  <div id="roundsTop"></div>
+  <div id="toast"></div>
 
-<div id="lightGlow"></div>
-<div id="lamp"></div>
-
-<div id="topBar">
-  <div id="roundCounter"></div>
-  <div id="turnLabel"></div>
-</div>
-
-<div id="players">
-  <div id="p1" class="player"></div>
+  <div id="p1" class="player panel"></div>
+  <div id="p2" class="player panel"></div>
 
   <div id="center">
     <div id="gun">🔫</div>
+    <div id="turnLabel"></div>
   </div>
 
-  <div id="p2" class="player"></div>
-</div>
+  <div id="comparison"></div>
+  <div id="ammoBottom"></div>
 
-<div id="ammoBar"></div>
+  <div id="log" class="panel log"></div>
+  <div id="controls" class="panel controls">
+    <b>Controls</b><br><br>
+    1 - Change Player 1 name<br>
+    2 - Change Player 2 name<br>
+    C - Toggle controls<br>
+    P - Toggle log<br><br>
+    Click either player panel to shoot that player.<br>
+    Click your inventory items to use them.
+  </div>
 
-<div id="overlay">
-  <div id="endCard"></div>
-</div>
-
+  <div id="overlay">
+    <div id="endCard" class="panel"></div>
+  </div>
 </div>
 
 <script>
+const TOTAL_ROUNDS = 18;
+const MAX_LIVES = 3;
 
-const MAX_ROUNDS = 8;
+const portraits = ["🕴️","🤠","😈","🃏","💀","🎩","🪖","👤"];
 
-const ROUND_TYPES = [
-  "LIVE",
-  "LIVE",
-  "BLANK",
-  "BLANK",
-  "FIRE",
-  "LIVE"
+const itemPool = [
+  { name:"Revive", icon:"✚", short:"Revive power" },
+  { name:"Healing", icon:"♥", short:"Heal 1" },
+  { name:"Skip Turn", icon:"⤼", short:"Skip enemy" },
+  { name:"Inspect", icon:"◌", short:"Peek ammo" },
+  { name:"Randomizer", icon:"↻", short:"Shuffle ammo" }
 ];
 
-const ITEM_POOL = [
-  "Heal",
-  "Inspect",
-  "Skip",
-  "Shuffle",
-  "Revive"
-];
+const state = {
+  active: 0,
+  roundIndex: 0,
+  roundPlan: [],
+  turnHasBonus: false,
+  turnBonusUsed: false,
+  locked: false,
+  log: []
+};
 
 const players = [
-  makePlayer("Player 1","🤠"),
-  makePlayer("Player 2","😈")
+  makePlayer("Player 1", 0),
+  makePlayer("Player 2", 1)
 ];
 
-function makePlayer(name,portrait){
+const inventories = [
+  [null, null, null],
+  [null, null, null]
+];
+
+const stats = [
+  { shots:0, self:0, items:0, damage:0, bonus:0 },
+  { shots:0, self:0, items:0, damage:0, bonus:0 }
+];
+
+const els = {
+  canvas: document.getElementById("shadowCanvas"),
+  world: document.getElementById("world"),
+  p1: document.getElementById("p1"),
+  p2: document.getElementById("p2"),
+  roundsTop: document.getElementById("roundsTop"),
+  comparison: document.getElementById("comparison"),
+  ammoBottom: document.getElementById("ammoBottom"),
+  turnLabel: document.getElementById("turnLabel"),
+  gun: document.getElementById("gun"),
+  toast: document.getElementById("toast"),
+  overlay: document.getElementById("overlay"),
+  endCard: document.getElementById("endCard"),
+  log: document.getElementById("log"),
+  controls: document.getElementById("controls"),
+  lightOrb: document.getElementById("lightOrb")
+};
+
+const ctx = els.canvas.getContext("2d");
+
+let mouse = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.22 };
+let light = { x: mouse.x, y: mouse.y };
+
+function makePlayer(name, i){
   return {
+    id:i,
     name,
-    portrait,
-    lives:5,
-    inventory:[],
-    dead:false,
-    extraShot:false,
-    shotThisTurn:false
+    portrait: portraits[i],
+    lives: 3,
+    exp: 0,
+    effects: [],
+    effectClass: ""
   };
 }
 
-const game = {
-  round:1,
-  chamber:[],
-  current:0,
-  active:0,
-  ended:false
-};
+function buildRoundPlan(){
+  const plan = [];
+  for(let i=0;i<TOTAL_ROUNDS;i++){
+    const r = Math.random();
+    if(r < 0.46) plan.push("LIVE");
+    else if(r < 0.80) plan.push("BLANK");
+    else plan.push("FIRE");
+  }
+  return plan;
+}
 
-reloadChamber();
+function tier(exp){
+  if(exp >= 90) return "Mythic";
+  if(exp >= 75) return "Veteran";
+  if(exp >= 50) return "Specialist";
+  if(exp >= 25) return "Sharpshooter";
+  return "Rookie";
+}
 
-function reloadChamber(){
-  game.chamber = [...ROUND_TYPES].sort(()=>Math.random()-.5);
-  game.current = 0;
+function toast(msg){
+  els.toast.textContent = msg;
+  els.toast.style.opacity = 1;
+  clearTimeout(els.toast._t);
+  els.toast._t = setTimeout(() => els.toast.style.opacity = 0, 2200);
+}
+
+function addLog(msg){
+  state.log.push(msg);
+  if(state.log.length > 60) state.log.shift();
+  renderLog();
+  toast(msg);
+}
+
+function renderLog(){
+  els.log.innerHTML = state.log.slice(-25).reverse().map(v => `<div class="logEntry">${v}</div>`).join("");
+}
+
+function renderPlayers(){
+  [0,1].forEach(i => {
+    const p = players[i];
+    const el = i === 0 ? els.p1 : els.p2;
+    const active = state.active === i;
+
+    el.className = `player panel ${active ? "active" : "inactive"}`;
+    el.style.pointerEvents = "auto";
+
+    el.innerHTML = `
+      <div class="name">
+        <button class="nameBtn" type="button">${p.name}</button>
+        <span class="editHint">click to rename</span>
+      </div>
+      <div class="small">${tier(p.exp)}</div>
+      <div class="portrait">${p.portrait}</div>
+
+      <div class="statRow"><span>Lives</span><span>${"♥".repeat(Math.max(0,p.lives))} <b>${p.lives}</b></span></div>
+      <div class="statRow"><span>EXP</span><span><b>${p.exp}</b>/100</span></div>
+      <div class="expbar"><div class="expfill" style="width:${p.exp}%"></div></div>
+      <div class="effects">${p.effects.join(" • ") || "&nbsp;"}</div>
+
+      <div class="inventoryWrap ${active ? "" : "inactive"}">
+        <div class="invLabel">
+          <span>Inventory</span>
+          <span>${active ? "Your turn" : "Greyed out"}</span>
+        </div>
+        <div class="inventory">
+          ${inventories[i].map((item, slot) => `
+            <div class="slot" data-slot="${slot}">
+              ${
+                item
+                ? `<div class="icon">${item.icon}</div><div class="label">${item.short}</div>`
+                : `<div class="icon">＋</div><div class="label">Empty</div>`
+              }
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    el.onclick = () => shoot(i);
+
+    const nameBtn = el.querySelector(".nameBtn");
+    nameBtn.onclick = (e) => {
+      e.stopPropagation();
+      renamePlayer(i);
+    };
+
+    el.querySelectorAll(".slot").forEach(slotEl => {
+      slotEl.onclick = (e) => {
+        e.stopPropagation();
+        if (active) useItem(i, Number(slotEl.dataset.slot));
+      };
+    });
+  });
+}
+
+function renderHUD(){
+  els.roundsTop.textContent = `Rounds left: ${Math.max(0, TOTAL_ROUNDS - state.roundIndex)} / ${TOTAL_ROUNDS}`;
+  els.turnLabel.textContent = `${players[state.active].name}'s turn`;
+
+  const remaining = state.roundPlan.slice(state.roundIndex);
+  if(!remaining.length){
+    els.ammoBottom.innerHTML = `
+      <div class="ammoLabel">Ammo</div>
+      <div class="ammoRow"><span class="ammo-empty">Empty</span></div>
+    `;
+    return;
+  }
+
+  els.ammoBottom.innerHTML = `
+    <div class="ammoLabel">Ammo</div>
+    <div class="ammoRow">
+      ${remaining.map(r => `<span class="ammoPip ammo-${r.toLowerCase()}" title="${r}"></span>`).join("")}
+    </div>
+  `;
+}
+
+function renderComparison(){
+  els.comparison.innerHTML = players.map((p, i) => `
+    <div class="compareCard">
+      <div class="compareTitle">
+        <strong>${p.name}</strong>
+        <span>${state.active === i ? "ACTIVE" : "WAITING"}</span>
+      </div>
+      <div class="compareGrid">
+        <div class="k">Lives</div><div class="v">${p.lives}</div>
+        <div class="k">Shots</div><div class="v">${stats[i].shots}</div>
+        <div class="k">Self shots</div><div class="v">${stats[i].self}</div>
+        <div class="k">Items</div><div class="v">${stats[i].items}</div>
+        <div class="k">Damage</div><div class="v">${stats[i].damage}</div>
+        <div class="k">Bonus shots</div><div class="v">${stats[i].bonus}</div>
+      </div>
+    </div>
+  `).join("");
 }
 
 function render(){
-
-  document.getElementById("roundCounter").innerHTML =
-    `ROUND ${game.round} / ${MAX_ROUNDS}`;
-
-  document.getElementById("turnLabel").innerHTML =
-    `${players[game.active].name}'s turn`;
-
-  renderPlayer(0);
-  renderPlayer(1);
-  renderAmmo();
-  updateShadows();
+  renderPlayers();
+  renderHUD();
+  renderComparison();
+  renderLog();
 }
 
-function renderPlayer(i){
-
-  const p = players[i];
-  const el = document.getElementById(i ? "p2" : "p1");
-
-  el.className =
-    "player " + (game.active === i ? "active" : "inactive");
-
-  el.innerHTML = `
-    <div class="shadow"></div>
-
-    <div class="name">${p.name}</div>
-
-    <div class="portrait">${p.portrait}</div>
-
-    <div class="stats">
-
-      <div class="statBox">
-        <div>Lives</div>
-        <h2>${p.lives}</h2>
-      </div>
-
-      <div class="statBox">
-        <div>Inventory</div>
-        <h2>${p.inventory.length}/3</h2>
-      </div>
-
-    </div>
-
-    <div class="inventory">
-      ${[0,1,2].map(slot=>{
-
-        const item = p.inventory[slot];
-
-        return `
-          <div class="slot"
-            onclick="event.stopPropagation();useItem(${i},${slot})">
-            ${item || "Empty"}
-          </div>
-        `;
-
-      }).join("")}
-    </div>
-  `;
-
-  /* NAME CHANGE */
-  el.querySelector(".name").onclick = (e)=>{
-    e.stopPropagation();
-
-    const n = prompt("Rename player",p.name);
-
-    if(n && n.trim()){
-      p.name = n.trim();
-      render();
-    }
-  };
-
-  /* SHOOT */
-  el.onclick = ()=>shoot(i);
+function flashPlayer(i, color){
+  const el = i === 0 ? els.p1 : els.p2;
+  el.classList.remove("flash-red","flash-blue","flash-orange","flash-green");
+  el.classList.add(`flash-${color}`);
+  clearTimeout(el._flash);
+  el._flash = setTimeout(() => el.classList.remove(`flash-${color}`), 550);
 }
 
-function renderAmmo(){
+function setEffect(i, text, color){
+  players[i].effects = [text];
+  flashPlayer(i, color);
+  renderPlayers();
+  clearTimeout(players[i]._effectTimer);
+  players[i]._effectTimer = setTimeout(() => {
+    players[i].effects = [];
+    renderPlayers();
+  }, 1400);
+}
 
-  const ammo = document.getElementById("ammoBar");
-
-  ammo.innerHTML = "";
-
-  for(let i=game.current;i<game.chamber.length;i++){
-
-    const div = document.createElement("div");
-
-    div.className = "bullet";
-
-    const r = game.chamber[i];
-
-    if(r === "LIVE") div.classList.add("live");
-    if(r === "BLANK") div.classList.add("blank");
-    if(r === "FIRE") div.classList.add("fire");
-
-    ammo.appendChild(div);
+function renamePlayer(i){
+  const current = players[i].name;
+  const n = prompt("Enter new name", current);
+  if(n && n.trim()){
+    players[i].name = n.trim();
+    addLog(`${current} is now ${players[i].name}.`);
+    render();
   }
+}
+
+function nextTurn(){
+  state.active = 1 - state.active;
+  state.turnHasBonus = false;
+  state.turnBonusUsed = false;
+}
+
+function applyDamage(targetIndex, amount){
+  const p = players[targetIndex];
+  p.lives = Math.max(0, p.lives - amount);
+}
+
+function applyRoundOutcome(roundType, shooterIndex, targetIndex){
+  const shooter = players[shooterIndex];
+  const target = players[targetIndex];
+
+  if(roundType === "LIVE"){
+    applyDamage(targetIndex, 1);
+    target.exp = Math.max(0, target.exp - 10);
+    stats[shooterIndex].damage += 1;
+    setEffect(targetIndex, "SHOT", "red");
+    addLog(`${shooter.name} fired LIVE at ${target.name}.`);
+  }
+
+  if(roundType === "FIRE"){
+    applyDamage(targetIndex, 2);
+    target.exp = Math.max(0, target.exp - 18);
+    stats[shooterIndex].damage += 2;
+    setEffect(targetIndex, "FIRE HIT", "orange");
+    addLog(`${shooter.name} fired FIRE at ${target.name} for 2 damage.`);
+  }
+
+  if(roundType === "BLANK"){
+    setEffect(shooterIndex, "BLANK", "blue");
+    addLog(`${shooter.name} fired a BLANK.`);
+  }
+
+  if(targetIndex === shooterIndex && !state.turnHasBonus){
+    state.turnHasBonus = true;
+    stats[shooterIndex].bonus += 1;
+    addLog(`${shooter.name} shot themselves and earned one extra shot.`);
+  }
+
+  if(state.turnHasBonus && !state.turnBonusUsed){
+    state.turnBonusUsed = true;
+  }
+}
+
+function maybeAwardItem(recipientIndex){
+  if(state.roundIndex <= 1) return;
+  if(Math.random() < 0.65){
+    const emptySlot = inventories[recipientIndex].findIndex(v => !v);
+    if(emptySlot === -1){
+      addLog(`${players[recipientIndex].name}'s inventory is full.`);
+      return;
+    }
+    const item = pickItem();
+    animateItemToInventory(recipientIndex, emptySlot, item);
+  }
+}
+
+function pickItem(){
+  const r = Math.random();
+  if(r < .28) return itemPool[0]; // Revive
+  if(r < .52) return itemPool[1]; // Healing
+  if(r < .70) return itemPool[2]; // Skip Turn
+  if(r < .86) return itemPool[3]; // Inspect
+  return itemPool[4];             // Randomizer
+}
+
+function animateItemToInventory(playerIndex, slotIndex, item){
+  const slot = els[`p${playerIndex + 1}`].querySelector(`.slot[data-slot="${slotIndex}"]`);
+  if(!slot){
+    inventories[playerIndex][slotIndex] = item;
+    render();
+    return;
+  }
+
+  const rect = slot.getBoundingClientRect();
+  const startX = window.innerWidth * 0.5;
+  const startY = window.innerHeight - 32;
+  const targetX = rect.left + rect.width * 0.5;
+  const targetY = rect.top + rect.height * 0.5;
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+
+  const ghost = document.createElement("div");
+  ghost.className = "floatingItem";
+  ghost.style.left = `${startX}px`;
+  ghost.style.top = `${startY}px`;
+  ghost.innerHTML = `<div>${item.icon}</div><div class="tiny">${item.short}</div>`;
+  document.body.appendChild(ghost);
+
+  const anim = ghost.animate([
+    { transform:"translate(-50%,-50%) scale(.7)", opacity:0 },
+    { transform:"translate(-50%,-50%) scale(1)", opacity:1, offset:.2 },
+    { transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.02)`, opacity:0 }
+  ], {
+    duration: 900,
+    easing: "cubic-bezier(.2,.8,.2,1)",
+    fill: "forwards"
+  });
+
+  anim.onfinish = () => {
+    ghost.remove();
+    inventories[playerIndex][slotIndex] = item;
+    players[playerIndex].effects = [`+ ${item.name}`];
+    flashPlayer(playerIndex, item.name === "Revive" ? "green" : "green");
+    stats[playerIndex].items += 1;
+    addLog(`${players[playerIndex].name} gained ${item.name}.`);
+    render();
+    clearTimeout(players[playerIndex]._effectTimer);
+    players[playerIndex]._effectTimer = setTimeout(() => {
+      players[playerIndex].effects = [];
+      renderPlayers();
+    }, 1100);
+  };
+}
+
+function useItem(playerIndex, slotIndex){
+  if(state.active !== playerIndex || state.locked) return;
+
+  const item = inventories[playerIndex][slotIndex];
+  if(!item) return;
+
+  inventories[playerIndex][slotIndex] = null;
+  stats[playerIndex].items += 1;
+
+  const p = players[playerIndex];
+
+  if(item.name === "Revive"){
+    p.lives = Math.min(MAX_LIVES, p.lives + 1);
+    p.exp = Math.min(100, p.exp + 12);
+    setEffect(playerIndex, "REVIVE", "green");
+    addLog(`${p.name} used Revive and gained 1 life.`);
+  }
+
+  if(item.name === "Healing"){
+    p.lives = Math.min(MAX_LIVES, p.lives + 1);
+    p.exp = Math.min(100, p.exp + 8);
+    setEffect(playerIndex, "HEAL", "green");
+    addLog(`${p.name} healed 1 life.`);
+  }
+
+  if(item.name === "Skip Turn"){
+    setEffect(1 - playerIndex, "SKIPPED", "blue");
+    addLog(`${players[1 - playerIndex].name} will lose their next turn.`);
+    state.skippedNext = 1 - playerIndex;
+  }
+
+  if(item.name === "Inspect"){
+    const next = state.roundPlan[state.roundIndex] || "NONE";
+    addLog(`${p.name} inspected the next round: ${next}.`);
+  }
+
+  if(item.name === "Randomizer"){
+    const remaining = state.roundPlan.slice(state.roundIndex).sort(() => Math.random() - .5);
+    state.roundPlan = [...state.roundPlan.slice(0, state.roundIndex), ...remaining];
+    addLog(`${p.name} shuffled the remaining ammo.`);
+  }
+
+  render();
 }
 
 function shoot(targetIndex){
-
-  if(game.ended) return;
-
-  const shooter = players[game.active];
-  const target = players[targetIndex];
-
-  /* only one shot */
-  if(shooter.shotThisTurn) return;
-
-  shooter.shotThisTurn = true;
-
-  if(game.current >= game.chamber.length){
-    reloadChamber();
+  if(state.locked) return;
+  if(state.roundIndex >= TOTAL_ROUNDS){
+    endGame();
+    return;
   }
 
-  const round = game.chamber[game.current++];
-  const selfShot = targetIndex === game.active;
+  if(state.skippedNext === state.active){
+    addLog(`${players[state.active].name}'s turn was skipped.`);
+    state.skippedNext = null;
+    nextTurn();
+    render();
+    return;
+  }
 
-  if(round === "LIVE"){
+  const shooterIndex = state.active;
+  const shooter = players[shooterIndex];
+  const target = players[targetIndex];
+  const roundType = state.roundPlan[state.roundIndex];
 
-    target.lives -= 1;
-    flash(targetIndex,"hit-red");
+  stats[shooterIndex].shots += 1;
+  if(targetIndex === shooterIndex) stats[shooterIndex].self += 1;
 
-  }else if(round === "FIRE"){
+  state.roundIndex += 1;
 
-    target.lives -= 2;
-    flash(targetIndex,"hit-orange");
+  applyRoundOutcome(roundType, shooterIndex, targetIndex);
 
-  }else{
-
-    flash(targetIndex,"hit-blue");
-
-    /* ONLY ONE EXTRA SHOT AFTER SELF BLANK */
-    if(selfShot && !shooter.extraShot){
-
-      shooter.extraShot = true;
-      shooter.shotThisTurn = false;
-
+  if(roundType === "BLANK"){
+    if(targetIndex === shooterIndex && !state.turnBonusUsed){
+      // keep the turn for the extra shot
+      maybeAwardItem(shooterIndex);
       render();
-      checkEnd();
+      if(state.roundIndex >= TOTAL_ROUNDS) endGame();
       return;
     }
   }
 
-  if(target.lives <= 0){
-    target.dead = true;
+  const turnEndedByBonus = state.turnHasBonus && state.turnBonusUsed;
+  const keepTurn = targetIndex === shooterIndex && !state.turnBonusUsed;
+
+  if(keepTurn){
+    maybeAwardItem(shooterIndex);
+    render();
+    if(state.roundIndex >= TOTAL_ROUNDS) endGame();
+    return;
   }
 
-  afterShot();
-}
+  state.turnHasBonus = false;
+  state.turnBonusUsed = false;
 
-function afterShot(){
+  maybeAwardItem(shooterIndex);
 
-  const p = players[game.active];
-
-  /* PASS TURN */
-  p.extraShot = false;
-  p.shotThisTurn = false;
-
-  game.active = 1 - game.active;
-
-  /* round progression */
-  if(game.active === 0){
-
-    game.round++;
-
-    if(game.round > 1){
-      giveItems();
-    }
-  }
-
+  nextTurn();
   render();
-  checkEnd();
+
+  if(state.roundIndex >= TOTAL_ROUNDS){
+    endGame();
+  }
 }
 
-function useItem(playerIndex,slot){
+function endGame(){
+  if(state.locked) return;
+  state.locked = true;
 
-  if(playerIndex !== game.active) return;
+  const winner =
+    players[0].lives > players[1].lives ? players[0].name :
+    players[1].lives > players[0].lives ? players[1].name :
+    "Draw";
 
-  const p = players[playerIndex];
-  const item = p.inventory[slot];
+  els.endCard.innerHTML = `
+    <h1 class="endTitle">${winner === "Draw" ? "Draw" : `${winner} Wins`}</h1>
+    <p class="endSub">Round limit reached.</p>
 
-  if(!item) return;
+    <div class="endCompare">
+      ${players.map((p, i) => `
+        <div class="endStatBox">
+          <h3>${p.name}</h3>
+          <div class="endStatRow"><span>Lives</span><b>${p.lives}</b></div>
+          <div class="endStatRow"><span>EXP</span><b>${p.exp}</b></div>
+          <div class="endStatRow"><span>Shots</span><b>${stats[i].shots}</b></div>
+          <div class="endStatRow"><span>Self shots</span><b>${stats[i].self}</b></div>
+          <div class="endStatRow"><span>Bonus shots</span><b>${stats[i].bonus}</b></div>
+          <div class="endStatRow"><span>Items used</span><b>${stats[i].items}</b></div>
+          <div class="endStatRow"><span>Damage</span><b>${stats[i].damage}</b></div>
+        </div>
+      `).join("")}
+    </div>
 
-  p.inventory.splice(slot,1);
+    <div style="margin-top:18px;display:flex;justify-content:flex-end;">
+      <button onclick="location.reload()">Play Again</button>
+    </div>
+  `;
 
-  if(item === "Heal"){
-    p.lives++;
-    flash(playerIndex,"hit-green");
-  }
-
-  if(item === "Inspect"){
-    alert("Next round: " + game.chamber[game.current]);
-  }
-
-  if(item === "Skip"){
-    game.active = playerIndex;
-  }
-
-  if(item === "Shuffle"){
-    reloadChamber();
-  }
-
-  if(item === "Revive"){
-    if(p.lives <= 0){
-      p.lives = 2;
-      p.dead = false;
-      flash(playerIndex,"hit-green");
-    }
-  }
-
-  render();
+  els.overlay.style.display = "flex";
 }
 
-function giveItems(){
+function resizeCanvas(){
+  els.canvas.width = window.innerWidth * devicePixelRatio;
+  els.canvas.height = window.innerHeight * devicePixelRatio;
+  els.canvas.style.width = window.innerWidth + "px";
+  els.canvas.style.height = window.innerHeight + "px";
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
 
-  players.forEach((p,i)=>{
+function getPlayerRects(){
+  const r1 = els.p1.getBoundingClientRect();
+  const r2 = els.p2.getBoundingClientRect();
+  return [r1, r2];
+}
 
-    if(p.inventory.length >= 3) return;
+function drawRectShadow(rect, lightPos, alpha=0.38){
+  const corners = [
+    { x: rect.left, y: rect.top },
+    { x: rect.right, y: rect.top },
+    { x: rect.right, y: rect.bottom },
+    { x: rect.left, y: rect.bottom },
+  ];
 
-    if(Math.random() < .75){
+  const far = corners.map(c => {
+    const dx = c.x - lightPos.x;
+    const dy = c.y - lightPos.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const reach = 900;
+    return { x: c.x + (dx / len) * reach, y: c.y + (dy / len) * reach };
+  });
 
-      const item =
-        ITEM_POOL[Math.floor(Math.random()*ITEM_POOL.length)];
+  ctx.fillStyle = `rgba(0,0,0,${alpha})`;
 
-      p.inventory.push(item);
+  const quads = [
+    [corners[0], corners[1], far[1], far[0]],
+    [corners[1], corners[2], far[2], far[1]],
+    [corners[2], corners[3], far[3], far[2]],
+    [corners[3], corners[0], far[0], far[3]]
+  ];
 
-      animateItem(item,i);
-    }
+  quads.forEach(q => {
+    ctx.beginPath();
+    ctx.moveTo(q[0].x, q[0].y);
+    ctx.lineTo(q[1].x, q[1].y);
+    ctx.lineTo(q[2].x, q[2].y);
+    ctx.lineTo(q[3].x, q[3].y);
+    ctx.closePath();
+    ctx.fill();
   });
 }
 
-function animateItem(item,playerIndex){
+function drawBackground(){
+  ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
 
-  const div = document.createElement("div");
+  const g = ctx.createRadialGradient(light.x, light.y, 18, light.x, light.y, 340);
+  g.addColorStop(0, "rgba(255,230,170,.38)");
+  g.addColorStop(.18, "rgba(255,215,145,.18)");
+  g.addColorStop(.5, "rgba(255,205,125,.05)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
 
-  div.className = "floatItem";
-  div.innerHTML = item;
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(light.x, light.y, 340, 0, Math.PI*2);
+  ctx.fill();
 
-  const tx = playerIndex === 0 ? "-500px" : "500px";
-  const ty = "-350px";
+  const [r1, r2] = getPlayerRects();
+  drawRectShadow(r1, light, 0.34);
+  drawRectShadow(r2, light, 0.34);
 
-  div.style.setProperty("--tx",tx);
-  div.style.setProperty("--ty",ty);
-
-  document.body.appendChild(div);
-
-  setTimeout(()=>div.remove(),1500);
+  // soft stage darkness
+  const vignette = ctx.createRadialGradient(
+    window.innerWidth * .5, window.innerHeight * .5, 120,
+    window.innerWidth * .5, window.innerHeight * .5, Math.max(window.innerWidth, window.innerHeight) * .72
+  );
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,.35)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 }
 
-function flash(i,className){
+function animate(){
+  light.x += (mouse.x - light.x) * 0.08;
+  light.y += (mouse.y - light.y) * 0.08;
 
-  const el = document.getElementById(i ? "p2" : "p1");
+  els.lightOrb.style.left = `${light.x}px`;
+  els.lightOrb.style.top = `${light.y}px`;
 
-  el.classList.add(className);
-
-  setTimeout(()=>{
-    el.classList.remove(className);
-  },800);
+  drawBackground();
+  requestAnimationFrame(animate);
 }
 
-function checkEnd(){
-
-  /* ONLY END IF SOMEONE IS DEAD OR ALL ROUNDS OVER */
-
-  const deadPlayer = players.find(p=>p.lives <= 0);
-
-  if(deadPlayer || game.round > MAX_ROUNDS){
-
-    game.ended = true;
-
-    let winner = "DRAW";
-
-    if(players[0].lives > players[1].lives){
-      winner = players[0].name;
-    }
-
-    if(players[1].lives > players[0].lives){
-      winner = players[1].name;
-    }
-
-    document.getElementById("overlay").style.display = "flex";
-
-    document.getElementById("endCard").innerHTML = `
-      <h1>${winner} WINS</h1>
-      <br>
-
-      <h2>${players[0].name}: ${players[0].lives} HP</h2>
-      <h2>${players[1].name}: ${players[1].lives} HP</h2>
-
-      <button onclick="location.reload()">
-        Play Again
-      </button>
-    `;
-  }
-}
-
-/* ================= REAL SHADOWS ================= */
-
-function updateShadows(){
-
-  const light = document.getElementById("lightGlow");
-  const lightRect = light.getBoundingClientRect();
-
-  const lx = lightRect.left + lightRect.width/2;
-  const ly = lightRect.top + lightRect.height/2;
-
-  document.querySelectorAll(".player").forEach(player=>{
-
-    const shadow = player.querySelector(".shadow");
-    const rect = player.getBoundingClientRect();
-
-    const px = rect.left + rect.width/2;
-    const py = rect.top + rect.height/2;
-
-    const dx = px - lx;
-    const dy = py - ly;
-
-    shadow.style.transform =
-      `translate(${dx*.12}px, ${dy*.12}px) skew(${-dx*.01}deg)`;
-
-  });
-}
-
-/* ================= LIGHT FOLLOW ================= */
-
-window.addEventListener("mousemove",(e)=>{
-
-  const glow = document.getElementById("lightGlow");
-
-  glow.style.left = (e.clientX - 350) + "px";
-  glow.style.top = (e.clientY - 350) + "px";
-
-  updateShadows();
+window.addEventListener("mousemove", e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  const leftHalf = e.clientX < window.innerWidth / 2;
+  els.gun.style.transform = `translateY(0) scaleX(${leftHalf ? -1 : 1}) rotate(${(e.clientY - window.innerHeight/2) / 220}deg)`;
 });
 
-/* ================= START ================= */
+window.addEventListener("keydown", e => {
+  if(e.key === "1") renamePlayer(0);
+  if(e.key === "2") renamePlayer(1);
+  if(e.key.toLowerCase() === "p") togglePanel("log");
+  if(e.key.toLowerCase() === "c") togglePanel("controls");
+});
 
-render();
+function togglePanel(id){
+  const el = els[id];
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
 
+window.addEventListener("resize", () => {
+  resizeCanvas();
+  render();
+});
+
+function init(){
+  resizeCanvas();
+  state.roundPlan = buildRoundPlan();
+  addLog("Rogue Roulette begins.");
+  render();
+  animate();
+}
+
+init();
 </script>
 </body>
 </html>
