@@ -1,621 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rogue Roulette</title>
-
-<style>
-:root{
-    --bg-dark:#050505;
-    --bg-panel:rgba(18,18,18,.92);
-    --bg-panel-2:rgba(28,28,28,.95);
-    --accent:#d4af37;
-    --live:#ff3131;
-    --blank:#4aa8ff;
-    --fire:#ff7b00;
-    --heal:#49ff73;
-    --poison:#a54dff;
-    --text:#e7e7e7;
-    --dim:#7c7c7c;
-}
-
-*{
-    box-sizing:border-box;
-}
-
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#000;
-    color:var(--text);
-    font-family:Consolas, monospace;
-    user-select:none;
-}
-
-/* ===========================
-BACKGROUND
-=========================== */
-
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:
-    radial-gradient(circle at top, rgba(255,255,255,.05), transparent 35%),
-    radial-gradient(circle at bottom, rgba(255,120,0,.05), transparent 30%),
-    linear-gradient(180deg,#121212 0%, #080808 60%, #020202 100%);
-    z-index:-4;
-}
-
-body::after{
-    content:"";
-    position:fixed;
-    inset:0;
-    background-image:
-    repeating-linear-gradient(
-        0deg,
-        rgba(255,255,255,.015) 0px,
-        rgba(255,255,255,.015) 1px,
-        transparent 2px,
-        transparent 4px
-    );
-    opacity:.25;
-    pointer-events:none;
-    z-index:-3;
-}
-
-#game-container{
-    position:relative;
-    width:100vw;
-    height:100vh;
-    overflow:hidden;
-    background:
-    radial-gradient(circle at center, rgba(80,80,80,.08), transparent 50%),
-    linear-gradient(180deg, rgba(10,10,10,.95), rgba(0,0,0,1)),
-    url("https://static.vecteezy.com/system/resources/thumbnails/007/995/476/small/brick-wall-background-seamless-texture-pattern-illustration-free-vector.jpg");
-    background-size:cover;
-}
-
-/* ===========================
-SCREENS
-=========================== */
-
-.screen{
-    position:fixed;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    background:
-    radial-gradient(circle at top, rgba(255,255,255,.04), transparent 30%),
-    linear-gradient(180deg,#111,#000);
-    z-index:100;
-}
-
-#main-menu h1{
-    color:var(--accent);
-    font-size:4rem;
-    letter-spacing:10px;
-    text-shadow:0 0 25px rgba(212,175,55,.4);
-}
-
-.lobby-row{
-    display:flex;
-    gap:50px;
-}
-
-.lobby-card{
-    width:260px;
-    padding:25px;
-    background:rgba(20,20,20,.95);
-    border:1px solid #2f2f2f;
-    border-radius:16px;
-    box-shadow:0 0 40px rgba(0,0,0,.5);
-    backdrop-filter:blur(8px);
-}
-
-button{
-    cursor:pointer;
-    border:none;
-    border-radius:10px;
-    padding:10px 20px;
-    background:linear-gradient(180deg,#3a3a3a,#1b1b1b);
-    color:#fff;
-    font-family:inherit;
-    transition:.25s;
-}
-
-button:hover{
-    transform:translateY(-2px);
-    background:linear-gradient(180deg,var(--accent),#9f7b18);
-    color:#000;
-}
-
-input[type=text]{
-    width:100%;
-    background:#070707;
-    color:var(--accent);
-    border:1px solid #444;
-    padding:10px;
-    border-radius:8px;
-    text-align:center;
-}
-
-/* ===========================
-PENDULUM
-=========================== */
-
-#pendulum-container{
-    position:absolute;
-    left:50%;
-    top:0;
-    width:2px;
-    height:330px;
-    background:#2d2d2d;
-    transform-origin:top center;
-    animation:swing 6s ease-in-out infinite;
-    z-index:6;
-}
-
-#light-bulb{
-    position:absolute;
-    bottom:-20px;
-    left:-11px;
-    width:24px;
-    height:24px;
-    border-radius:50%;
-    background:#fff5c0;
-    box-shadow:
-    0 0 20px rgba(255,255,255,.6),
-    0 0 120px rgba(255,255,255,.12);
-}
-
-@keyframes swing{
-    0%,100%{ transform:rotate(11deg); }
-    50%{ transform:rotate(-11deg); }
-}
-
-#lighting-overlay{
-    position:absolute;
-    inset:0;
-    z-index:5;
-    pointer-events:none;
-}
-
-/* ===========================
-ARENA
-=========================== */
-
-#arena{
-    width:100%;
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:space-around;
-    position:relative;
-    z-index:10;
-    padding-top:90px;
-}
-
-.player-card{
-    width:260px;
-    padding:22px;
-    border-radius:18px;
-    background:
-    linear-gradient(180deg, rgba(40,40,40,.3), rgba(10,10,10,.95)),
-    rgba(10,10,10,.92);
-
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:
-    0 0 30px rgba(0,0,0,.5),
-    inset 0 0 40px rgba(255,255,255,.02);
-
-    transition:.3s;
-    position:relative;
-    overflow:hidden;
-}
-
-.player-card::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(130deg, rgba(255,255,255,.04), transparent 30%);
-    pointer-events:none;
-}
-
-.player-card.active{
-    transform:translateY(-8px);
-    border-color:rgba(212,175,55,.6);
-    box-shadow:
-    0 0 40px rgba(212,175,55,.15),
-    0 0 100px rgba(0,0,0,.6);
-}
-
-.portrait{
-    width:130px;
-    height:130px;
-    border-radius:14px;
-    margin:12px auto;
-    border:3px solid #2d2d2d;
-    background:#0d0d0d;
-    background-size:cover;
-    background-position:center;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:4.5rem;
-    transition:.2s;
-    position:relative;
-    overflow:hidden;
-}
-
-.portrait::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(180deg, rgba(255,255,255,.06), transparent);
-    pointer-events:none;
-}
-
-.portrait:hover{
-    border-color:var(--live);
-    box-shadow:0 0 20px rgba(255,50,50,.3);
-}
-
-/* ===========================
-INVENTORY
-=========================== */
-
-.inventory{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-    margin-top:14px;
-}
-
-.inv-slot{
-    width:42px;
-    height:42px;
-    background:#0d0d0d;
-    border:1px solid #333;
-    border-radius:10px;
-    font-size:1.2rem;
-    transition:.2s;
-}
-
-.inv-slot:hover{
-    border-color:var(--accent);
-    transform:translateY(-2px);
-}
-
-/* ===========================
-GUN
-=========================== */
-
-#gun-system{
-    position:absolute;
-    top:55%;
-    left:50%;
-    width:180px;
-    height:100px;
-    transform:translate(-50%,-50%);
-    pointer-events:none;
-    z-index:15;
-    transition:left .35s cubic-bezier(.2,.8,.2,1);
-}
-
-.gun-emoji{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    font-size:5.7rem;
-    filter:drop-shadow(0 0 20px rgba(0,0,0,.8));
-    transform-origin:center center;
-}
-
-.pre-fire{
-    animation:prefireShake .08s infinite;
-}
-
-.recoil{
-    animation:gunRecoil .2s ease-out;
-}
-
-@keyframes prefireShake{
-    0%{ transform:translate(-50%,-50%) translate(0px,0px); }
-    25%{ transform:translate(-50%,-50%) translate(2px,-2px); }
-    50%{ transform:translate(-50%,-50%) translate(-2px,2px); }
-    75%{ transform:translate(-50%,-50%) translate(3px,1px); }
-    100%{ transform:translate(-50%,-50%) translate(-2px,-1px); }
-}
-
-@keyframes gunRecoil{
-    0%{
-        transform:translate(-50%,-50%);
-    }
-    40%{
-        transform:translate(-75%,-50%);
-    }
-    100%{
-        transform:translate(-50%,-50%);
-    }
-}
-
-/* ===========================
-FLASH
-=========================== */
-
-#flash-overlay{
-    position:fixed;
-    inset:0;
-    opacity:0;
-    pointer-events:none;
-    z-index:80;
-    transition:opacity .12s;
-}
-
-/* ===========================
-TOAST
-=========================== */
-
-#toast{
-    position:absolute;
-    top:110px;
-    left:50%;
-    transform:translateX(-50%);
-    padding:16px 34px;
-    background:rgba(0,0,0,.88);
-    border:1px solid rgba(212,175,55,.4);
-    border-radius:12px;
-    color:var(--accent);
-    opacity:0;
-    z-index:100;
-    transition:.4s;
-    box-shadow:0 0 30px rgba(0,0,0,.5);
-}
-
-/* ===========================
-ROUND OVERLAY
-=========================== */
-
-#round-overlay{
-    position:fixed;
-    top:-100%;
-    left:0;
-    width:100%;
-    height:100%;
-    background:
-    linear-gradient(180deg, rgba(0,0,0,.98), rgba(10,10,10,.95));
-    z-index:300;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    transition:top .9s cubic-bezier(.2,.8,.2,1);
-    backdrop-filter:blur(12px);
-}
-
-#round-overlay.show{
-    top:0;
-}
-
-#round-overlay.hide{
-    top:-100%;
-}
-
-#round-overlay h1{
-    font-size:4rem;
-    color:var(--accent);
-    margin-bottom:10px;
-    letter-spacing:8px;
-}
-
-.round-stats{
-    margin-top:20px;
-    color:#ccc;
-    font-size:1.2rem;
-    text-align:center;
-    line-height:2;
-}
-
-/* ===========================
-ANIMATIONS
-=========================== */
-
-@keyframes heartbeat{
-    0%,100%{ transform:scale(1); }
-    30%{ transform:scale(1.18); }
-}
-
-.heart-pop{
-    display:inline-block;
-    animation:heartbeat 1.2s infinite;
-}
-
-@keyframes fadeHeart{
-    0%{
-        opacity:1;
-        transform:translateY(0px) scale(1);
-    }
-    100%{
-        opacity:0;
-        transform:translateY(-25px) scale(1.5);
-    }
-}
-
-.losing-heart{
-    animation:fadeHeart .8s forwards;
-}
-
-@keyframes cardShake{
-    0%{ transform:translateX(0); }
-    20%{ transform:translateX(-6px); }
-    40%{ transform:translateX(5px); }
-    60%{ transform:translateX(-4px); }
-    80%{ transform:translateX(3px); }
-    100%{ transform:translateX(0); }
-}
-
-.card-hit{
-    animation:cardShake .35s;
-}
-
-/* ===========================
-DEATH
-=========================== */
-
-@keyframes deathFall{
-    0%{
-        transform:translateY(0);
-        opacity:1;
-    }
-    100%{
-        transform:translateY(120vh);
-        opacity:0;
-    }
-}
-
-.dead-tumble{
-    animation:deathFall 1.4s cubic-bezier(.2,.8,.2,1) forwards;
-}
-
-.ammo-dot{
-    font-size:2rem;
-    margin:0 5px;
-    color:#444;
-}
-
-/* ===========================
-HEADER
-=========================== */
-
-#header{
-    position:relative;
-    z-index:20;
-    text-align:center;
-    padding-top:20px;
-}
-
-#match-info{
-    font-size:1.5rem;
-    color:var(--accent);
-    letter-spacing:4px;
-}
-
-#footer{
-    position:absolute;
-    bottom:15px;
-    width:100%;
-    text-align:center;
-    color:#555;
-    z-index:20;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rogue Roulette</title>
+    <style>
+        :root {a
+            --bg-dark: #050505;
+            --panel-bg: rgba(15, 15, 15, 0.9);
+            --accent-yellow: #c2a000;
+            --live-red: #880000;
+            --blank-blue: #004488;
+            --fire-orange: #aa4400;
+            --heal-green: #115511;
+            --poison-purple: #440066;
+            --text-dim: #666;
+            --rust: #3d2b1f;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--bg-dark);
+            color: #bbb;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Darker, Dingier Background */
+        #game-container {
+            position: relative;
+            width: 100vw; height: 100vh;
+            background: 
+                radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%),
+                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), 
+                url('https://www.transparenttextures.com/patterns/dark-matter.png'),
+                #111;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            box-shadow: inset 0 0 200px #000;
+        }
+
+        /* Pendulum Light */
+        #pendulum-container {
+            position: absolute; top: 0; left: 50%;
+            width: 2px; height: 250px;
+            background: #222;
+            transform-origin: top center;
+            animation: swing 6s ease-in-out infinite;
+            z-index: 6;
+        }
+        #light-bulb {
+            position: absolute; bottom: -25px; left: -12px;
+            width: 24px; height: 24px;
+            background: #ffe; border-radius: 50%;
+            box-shadow: 0 0 60px 10px rgba(255, 255, 255, 0.1);
+            transition: background-color 0.1s, box-shadow 0.1s;
+        }
+        @keyframes swing {
+            0%, 100% { transform: rotate(12deg); }
+            50% { transform: rotate(-12deg); }
+        }
+
+        #lighting-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5; opacity: 0.6;
+        }
+
+        /* Stats Overlay Slide */
+        #stats-overlay {
+            position: fixed; top: -100%; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.98);
+            z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: top 0.8s cubic-bezier(0.85, 0, 0.15, 1);
+            border-bottom: 5px solid var(--rust);
+        }
+        #stats-overlay.active { top: 0; }
+
+        /* Screens */
+        .screen {
+            position: fixed; inset: 0; background: var(--bg-dark);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        #main-menu { background: radial-gradient(#1a1a1a, #000); }
+
+        .lobby-card { 
+            background: #0f0f0f; padding: 20px; border: 1px solid #222; 
+            text-align: center; width: 250px; border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        button { 
+            cursor: pointer; padding: 10px 20px; background: #1a1a1a; 
+            color: #888; border: 1px solid #333; font-family: inherit; 
+            margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;
+        }
+        button:hover { background: #222; color: var(--accent-yellow); border-color: var(--accent-yellow); }
+
+        /* Arena */
+        .player-card {
+            width: 240px; padding: 25px;
+            background: var(--panel-bg);
+            border: 1px solid #222; border-radius: 2px;
+            text-align: center; position: relative;
+        }
+        .player-card.active { border-color: #444; background: rgba(20,20,20,0.95); }
+
+        .portrait {
+            width: 140px; height: 140px; margin: 0 auto 15px;
+            background-color: #000; background-size: cover; background-position: center;
+            border: 2px solid #222; filter: grayscale(0.5) contrast(1.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5rem; cursor: crosshair;
+        }
+        .active .portrait { border-color: #333; filter: grayscale(0); }
+
+        /* Gun Graphics */
+        #gun-system {
+            position: absolute; top: 55%; left: 50%;
+            width: 140px; height: 80px;
+            transform: translate(-50%, -50%);
+            pointer-events: none; z-index: 15;
+            display: flex; align-items: center; justify-content: center;
+            transition: left 0.5s ease-in-out;
+        }
+        .gun-emoji { 
+            font-size: 5rem; 
+            filter: drop-shadow(0 0 15px rgba(0,0,0,1)); 
+            transform-origin: center center;
+        }
+
+        /* Shake Effects */
+        @keyframes recoil {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-40px) rotate(-10deg); }
+            100% { transform: translateX(0); }
+        }
+        .recoil-anim { animation: recoil 0.4s ease-out; }
+
+        @keyframes intense-shake {
+            0%, 100% { transform: translate(0,0); }
+            25% { transform: translate(2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, 2px); }
+        }
+        .shaking-heavy { animation: intense-shake 0.1s infinite; }
+
+        /* Life Heart Animation */
+        .heart { display: inline-block; transition: all 0.5s ease; color: var(--live-red); margin: 0 2px; }
+        .heart-pop { transform: scale(2); opacity: 0; }
+
+        .ammo-dot { font-size: 1.5rem; margin: 0 4px; opacity: 0.3; }
+
+        #toast {
+            position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
+            padding: 10px 40px; background: #000; border-left: 4px solid var(--accent-yellow);
+            color: #fff; z-index: 500; opacity: 0; transition: opacity 0.3s;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 3px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="flash-overlay"></div>
-
-<div id="round-overlay">
-    <h1 id="round-title">ROUND COMPLETE</h1>
-
-    <div class="round-stats" id="round-stats">
-        ROUND SUMMARY
+<div id="stats-overlay">
+    <h1 id="stats-round-title" style="color: var(--accent-yellow); font-size: 3rem;">ROUND COMPLETE</h1>
+    <div id="stats-content" style="text-align: center; font-size: 1.5rem; line-height: 2;">
+        <p>REMAINING LIVES:</p>
+        <p id="stats-p0-report"></p>
+        <p id="stats-p1-report"></p>
     </div>
+    <div style="margin-top: 40px; color: #444;" id="stats-timer">Next round in 6s...</div>
 </div>
 
 <div id="main-menu" class="screen">
-
-    <h1>ROGUE ROULETTE</h1>
-
-    <div class="lobby-row">
-
+    <h1 style="color: #444; font-size: 4rem; letter-spacing: 15px; margin-bottom: 5px;">ROGUE ROULETTE</h1>
+    <p style="color: #222; margin-bottom: 40px; letter-spacing: 5px;">TACTICAL CASUALTY SIMULATOR</p>
+    <div class="lobby-row" style="display: flex; gap: 30px;">
         <div class="lobby-card">
-            <h3>PLAYER 1</h3>
-
-            <input type="text" id="p0-name-in" value="PLAYER 1">
-
-            <div id="p0-portrait-display" class="portrait">👤</div>
-
-            <button onclick="cyclePortLobby(0)">Random Emoji</button>
-
-            <input type="file" accept="image/*"
-            onchange="handleImageUpload(0,event)">
+            <input type="text" id="p0-name-in" value="UNIT_01" style="background:#000; border:1px solid #333; color:var(--accent-yellow); text-align:center; padding:5px; width:80%;">
+            <div id="p0-portrait-display" class="portrait" style="margin-top:15px;">👤</div>
+            <button onclick="cyclePortLobby(0)">Mirror</button>
         </div>
-
         <div class="lobby-card">
-            <h3>PLAYER 2</h3>
-
-            <input type="text" id="p1-name-in" value="PLAYER 2">
-
-            <div id="p1-portrait-display" class="portrait">👤</div>
-
-            <button onclick="cyclePortLobby(1)">Random Emoji</button>
-
-            <input type="file" accept="image/*"
-            onchange="handleImageUpload(1,event)">
+            <input type="text" id="p1-name-in" value="UNIT_02" style="background:#000; border:1px solid #333; color:var(--accent-yellow); text-align:center; padding:5px; width:80%;">
+            <div id="p1-portrait-display" class="portrait" style="margin-top:15px;">👤</div>
+            <button onclick="cyclePortLobby(1)">Mirror</button>
         </div>
-
     </div>
-
-    <button
-    style="margin-top:40px; font-size:1.2rem; padding:16px 60px;"
-    onclick="startGame()">
-    START DUEL
-    </button>
-
+    <button style="font-size: 1.5rem; padding: 15px 60px; margin-top: 40px;" onclick="startGame()">ENGAGE</button>
 </div>
 
 <div id="game-container">
-
-    <div id="pendulum-container">
-        <div id="light-bulb"></div>
-    </div>
-
+    <div id="pendulum-container"><div id="light-bulb"></div></div>
     <canvas id="lighting-overlay"></canvas>
 
-    <div id="header">
-        <div id="match-info">ROUND 1 / 5</div>
+    <div id="header" style="text-align: center; padding: 30px; z-index: 10;">
+        <div id="match-info" style="font-size: 1.2rem; color: #444; letter-spacing: 4px;">SEC_01 // CHM_06</div>
         <div id="ammo-display"></div>
     </div>
 
-    <div id="toast"></div>
+    <div id="toast">SYSTEM MESSAGE</div>
 
     <div id="arena">
-
         <div id="p0-card" class="player-card active">
-
-            <div id="p0-name-tag">PLAYER 1</div>
-
-            <div class="portrait" id="p0-portrait"
-            onclick="handleShoot(0)">👤</div>
-
-            <div class="stats">
-                LIVES:
-                <span id="p0-lives"></span>
-                <br>
-                EXP:
-                <span id="p0-exp">0</span>
+            <div class="name-tag" id="p0-name-tag" style="font-weight: bold; margin-bottom: 10px;">UNIT_01</div>
+            <div class="portrait" id="p0-portrait" onclick="handleShoot(0)">👤</div>
+            <div id="p0-lives" style="font-size: 1.5rem;"></div>
+            <div class="inventory" id="p0-inv" style="display:flex; justify-content:center; gap:5px; margin-top:10px;">
+                <button class="inv-slot" onclick="useItem(0, 0)" style="width:35px; height:35px; padding:0;"></button>
+                <button class="inv-slot" onclick="useItem(0, 1)" style="width:35px; height:35px; padding:0;"></button>
+                <button class="inv-slot" onclick="useItem(0, 2)" style="width:35px; height:35px; padding:0;"></button>
             </div>
-
-            <div class="inventory" id="p0-inv">
-                <button class="inv-slot"
-                onclick="useItem(0,0)"></button>
-
-                <button class="inv-slot"
-                onclick="useItem(0,1)"></button>
-
-                <button class="inv-slot"
-                onclick="useItem(0,2)"></button>
-            </div>
-
-            <div id="p0-status"></div>
+            <div id="p0-status" style="height: 20px; font-size: 0.7rem; margin-top: 10px; opacity: 0.6;"></div>
         </div>
 
         <div id="gun-system">
@@ -623,840 +221,272 @@ HEADER
         </div>
 
         <div id="p1-card" class="player-card">
-
-            <div id="p1-name-tag">PLAYER 2</div>
-
-            <div class="portrait" id="p1-portrait"
-            onclick="handleShoot(1)">👤</div>
-
-            <div class="stats">
-                LIVES:
-                <span id="p1-lives"></span>
-                <br>
-                EXP:
-                <span id="p1-exp">0</span>
+            <div class="name-tag" id="p1-name-tag" style="font-weight: bold; margin-bottom: 10px;">UNIT_02</div>
+            <div class="portrait" id="p1-portrait" onclick="handleShoot(1)">👤</div>
+            <div id="p1-lives" style="font-size: 1.5rem;"></div>
+            <div class="inventory" id="p1-inv" style="display:flex; justify-content:center; gap:5px; margin-top:10px;">
+                <button class="inv-slot" onclick="useItem(1, 0)" style="width:35px; height:35px; padding:0;"></button>
+                <button class="inv-slot" onclick="useItem(1, 1)" style="width:35px; height:35px; padding:0;"></button>
+                <button class="inv-slot" onclick="useItem(1, 2)" style="width:35px; height:35px; padding:0;"></button>
             </div>
-
-            <div class="inventory" id="p1-inv">
-                <button class="inv-slot"
-                onclick="useItem(1,0)"></button>
-
-                <button class="inv-slot"
-                onclick="useItem(1,1)"></button>
-
-                <button class="inv-slot"
-                onclick="useItem(1,2)"></button>
-            </div>
-
-            <div id="p1-status"></div>
-
+            <div id="p1-status" style="height: 20px; font-size: 0.7rem; margin-top: 10px; opacity: 0.6;"></div>
         </div>
-
     </div>
 
-    <div id="footer">
-        CHAMBER:
-        <span id="chamber-count">6/6</span>
+    <div id="footer" style="padding: 20px; z-index: 10; font-size: 0.8rem; color: #222;">
+        STATUS: OPERATIONAL | CHAMBER: <span id="chamber-count">6/6</span>
     </div>
-
-</div>
-
-<div id="end-screen" class="screen" style="display:none;">
-    <h1 id="winner-text">MATCH OVER</h1>
-
-    <button onclick="rematch()">
-        REMATCH
-    </button>
 </div>
 
 <script>
-
-const ITEMS = [
-{
-    name:'Medkit',
-    icon:'💉',
-    effect:'heal',
-    desc:'Heal 1 life.'
-},
-{
-    name:'Handcuffs',
-    icon:'⛓️',
-    effect:'skip',
-    desc:'Skip enemy turn.'
-},
-{
-    name:'Magnifier',
-    icon:'🔍',
-    effect:'inspect',
-    desc:'Reveal next bullet.'
-},
-{
-    name:'Dice',
-    icon:'🎲',
-    effect:'shuffle',
-    desc:'Shuffle chamber.'
-},
-{
-    name:'Chronos',
-    icon:'⏳',
-    effect:'extend',
-    desc:'Add round.'
-}
-];
-
-const BULLET_COLORS = {
-    LIVE:'var(--live)',
-    BLANK:'var(--blank)',
-    FIRE:'var(--fire)'
-};
-
-let state = {
-    turn:0,
-    chamber:[],
-    chamberIdx:0,
-    currentRound:1,
-    maxRounds:5,
-    canShoot:true,
-    revealedIdx:-1,
-    isSkipped:false,
-
-    players:[
-        {
-            name:"PLAYER 1",
-            lives:4,
-            exp:0,
-            inv:[],
-            port:"👤",
-            customImg:null
-        },
-        {
-            name:"PLAYER 2",
-            lives:4,
-            exp:0,
-            inv:[],
-            port:"👤",
-            customImg:null
-        }
-    ]
-};
-
-const portraits = [
-"👤","💀","🤖","👺","🤠","👽","🐺","🐱","🤡"
-];
-
-let mouseX = innerWidth/2;
-let mouseY = innerHeight/2;
-
-/* ===========================
-MOUSE AIM
-=========================== */
-
-window.addEventListener("mousemove",e=>{
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    updateGunAim();
-});
-
-function updateGunAim(){
-
-    const gun = document.getElementById("gun-system");
-    const emoji = document.getElementById("gun-emoji");
-
-    const rect = gun.getBoundingClientRect();
-
-    const cx = rect.left + rect.width/2;
-    const cy = rect.top + rect.height/2;
-
-    const angle = Math.atan2(mouseY-cy, mouseX-cx);
-    const deg = angle * 180 / Math.PI;
-
-    /* FIXED:
-       no rolling upside down
-       only flip left/right
-    */
-
-    const flipX = mouseX < cx ? -1 : 1;
-
-    emoji.style.transform =
-    `translate(-50%,-50%) rotate(${deg}deg) scaleY(${flipX})`;
-}
-
-/* ===========================
-LOBBY
-=========================== */
-
-function cyclePortLobby(p){
-
-    const player = state.players[p];
-
-    player.customImg = null;
-
-    const idx = portraits.indexOf(player.port);
-
-    player.port =
-    portraits[(idx+1)%portraits.length];
-
-    const el =
-    document.getElementById(`p${p}-portrait-display`);
-
-    el.style.backgroundImage = "none";
-    el.innerText = player.port;
-}
-
-function handleImageUpload(idx,e){
-
-    const file = e.target.files[0];
-
-    if(!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = ev=>{
-
-        state.players[idx].customImg =
-        ev.target.result;
-
-        const el =
-        document.getElementById(
-            `p${idx}-portrait-display`
-        );
-
-        el.innerText = "";
-        el.style.backgroundImage =
-        `url(${ev.target.result})`;
-    };
-
-    reader.readAsDataURL(file);
-}
-
-/* ===========================
-GAME START
-=========================== */
-
-function startGame(){
-
-    for(let i=0;i<2;i++){
-
-        let n =
-        document.getElementById(
-            `p${i}-name-in`
-        ).value.trim();
-
-        if(!n) n = `PLAYER ${i+1}`;
-
-        state.players[i].name = n.toUpperCase();
-
-        document.getElementById(
-            `p${i}-name-tag`
-        ).innerText = state.players[i].name;
-
-        const portrait =
-        document.getElementById(
-            `p${i}-portrait`
-        );
-
-        if(state.players[i].customImg){
-
-            portrait.innerText = "";
-
-            portrait.style.backgroundImage =
-            `url(${state.players[i].customImg})`;
-
-        }else{
-
-            portrait.style.backgroundImage = "none";
-            portrait.innerText = state.players[i].port;
-        }
-    }
-
-    document.getElementById("main-menu")
-    .style.display = "none";
-
-    initChamber();
-    drawShadows();
-}
-
-/* ===========================
-CHAMBER
-=========================== */
-
-function initChamber(){
-
-    let pool = [
-        "LIVE",
-        "LIVE",
-        "BLANK",
-        "BLANK",
-        "BLANK",
-        "FIRE"
+    const ITEMS = [
+        { name: 'Fixer', icon: '💉', effect: 'heal' },
+        { name: 'Restraint', icon: '⛓️', effect: 'skip' },
+        { name: 'Lens', icon: '🔍', effect: 'inspect' },
+        { name: 'Chaos', icon: '🎲', effect: 'shuffle' }
     ];
 
-    state.chamber =
-    pool.sort(()=>Math.random()-.5);
+    let state = {
+        turn: 0,
+        chamber: [],
+        chamberIdx: 0,
+        currentRound: 1,
+        canShoot: true,
+        isSkipped: false,
+        players: [
+            { name: "P1", lives: 4, inv: [], port: "👤", portIdx: 0 },
+            { name: "P2", lives: 4, inv: [], port: "👤", portIdx: 0 }
+        ]
+    };
 
-    state.chamberIdx = 0;
+    const portraits = ["👤", "💀", "👺", "🤡", "🤖", "👽"];
 
-    updateUI();
-}
-
-/* ===========================
-FLASH
-=========================== */
-
-function flashScreen(color){
-
-    const flash =
-    document.getElementById("flash-overlay");
-
-    flash.style.background = color;
-    flash.style.opacity = ".35";
-
-    setTimeout(()=>{
-        flash.style.opacity = "0";
-    },120);
-}
-
-/* ===========================
-SHOOT
-=========================== */
-
-function handleShoot(targetIdx){
-
-    if(!state.canShoot) return;
-
-    state.canShoot = false;
-
-    const bullet =
-    state.chamber[state.chamberIdx];
-
-    const gun =
-    document.getElementById("gun-emoji");
-
-    gun.classList.add("pre-fire");
-
-    flashScreen(BULLET_COLORS[bullet]);
-
-    setTimeout(()=>{
-
-        gun.classList.remove("pre-fire");
-        gun.classList.add("recoil");
-
-        setTimeout(()=>{
-            gun.classList.remove("recoil");
-        },200);
-
-        resolveShot(
-            bullet,
-            targetIdx,
-            targetIdx === state.turn
-        );
-
-    },240);
-}
-
-function resolveShot(type,targetIdx,isSelf){
-
-    const card =
-    document.getElementById(
-        `p${targetIdx}-card`
-    );
-
-    card.classList.add("card-hit");
-
-    setTimeout(()=>{
-        card.classList.remove("card-hit");
-    },350);
-
-    let dmg = 0;
-
-    if(type === "LIVE") dmg = 1;
-    if(type === "FIRE") dmg = 2;
-
-    if(dmg > 0){
-
-        animateHeartLoss(targetIdx,dmg);
-
-        state.players[targetIdx].lives -= dmg;
-
-        showToast(
-            `${state.players[targetIdx].name} HIT`,
-            1800
-        );
-
-    }else{
-
-        showToast("...CLICK",1500);
-
-        if(isSelf){
-            state.players[state.turn].exp += 15;
-        }
+    function cyclePortLobby(p) {
+        state.players[p].portIdx = (state.players[p].portIdx + 1) % portraits.length;
+        state.players[p].port = portraits[state.players[p].portIdx];
+        document.getElementById(`p${p}-portrait-display`).innerText = state.players[p].port;
     }
 
-    state.chamberIdx++;
-
-    updateUI();
-
-    if(
-        state.players[0].lives <= 0 ||
-        state.players[1].lives <= 0
-    ){
-
-        if(state.players[0].lives <= 0){
-            document.getElementById("p0-card")
-            .classList.add("dead-tumble");
+    function startGame() {
+        for(let i=0; i<2; i++) {
+            state.players[i].name = document.getElementById(`p${i}-name-in`).value.toUpperCase();
+            document.getElementById(`p${i}-name-tag`).innerText = state.players[i].name;
+            document.getElementById(`p${i}-portrait`).innerText = state.players[i].port;
         }
-
-        if(state.players[1].lives <= 0){
-            document.getElementById("p1-card")
-            .classList.add("dead-tumble");
-        }
-
-        setTimeout(endMatch,1800);
-        return;
-    }
-
-    setTimeout(()=>{
-
-        if(state.chamberIdx >= 6){
-
-            nextRound();
-
-        }else{
-
-            passTurn();
-            updateUI();
-        }
-
-    },1700);
-}
-
-/* ===========================
-HEART ANIMATION
-=========================== */
-
-function animateHeartLoss(player,dmg){
-
-    const lives =
-    document.getElementById(`p${player}-lives`);
-
-    const hearts =
-    lives.querySelectorAll(".heart-pop");
-
-    for(let i=0;i<dmg;i++){
-
-        const target =
-        hearts[hearts.length-1-i];
-
-        if(target){
-
-            setTimeout(()=>{
-                target.classList.add("losing-heart");
-            }, i*300);
-        }
-    }
-}
-
-/* ===========================
-TURN
-=========================== */
-
-function passTurn(){
-
-    let next = 1 - state.turn;
-
-    if(state.isSkipped){
-
-        state.isSkipped = false;
-
-        showToast(
-            `${state.players[next].name} SKIPPED`,
-            2000
-        );
-
-        state.canShoot = true;
-
-    }else{
-
-        state.turn = next;
-        state.canShoot = true;
-    }
-}
-
-/* ===========================
-ROUND TRANSITION
-=========================== */
-
-function nextRound(){
-
-    state.currentRound++;
-
-    if(state.currentRound > state.maxRounds){
-
-        endMatch();
-        return;
-    }
-
-    const overlay =
-    document.getElementById("round-overlay");
-
-    document.getElementById("round-title")
-    .innerText =
-    `ROUND ${state.currentRound-1} COMPLETE`;
-
-    document.getElementById("round-stats")
-    .innerHTML = `
-        NEXT ROUND: ${state.currentRound}<br>
-        ${state.players[0].name}: ${state.players[0].lives} HP<br>
-        ${state.players[1].name}: ${state.players[1].lives} HP
-    `;
-
-    overlay.classList.remove("hide");
-    overlay.classList.add("show");
-
-    awardItems();
-
-    setTimeout(()=>{
-
-        overlay.classList.remove("show");
-        overlay.classList.add("hide");
-
-    },5000);
-
-    setTimeout(()=>{
-
+        document.getElementById('main-menu').style.display = 'none';
         initChamber();
+        drawShadows();
+    }
 
-        state.turn = 0;
-        state.canShoot = true;
+    function initChamber() {
+        let pool = ['LIVE', 'LIVE', 'BLANK', 'BLANK', 'BLANK', 'FIRE'];
+        state.chamber = pool.sort(() => Math.random() - 0.5);
+        state.chamberIdx = 0;
+        updateUI();
+    }
 
-    },6000);
-}
+    function updateGunAim(mouseX, mouseY) {
+        const gun = document.getElementById('gun-emoji');
+        const container = document.getElementById('gun-system');
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
 
-/* ===========================
-ITEMS
-=========================== */
+        const angle = Math.atan2(mouseY - centerY, mouseX - centerX);
+        let deg = angle * (180 / Math.PI);
 
-function awardItems(){
-
-    state.players.forEach(p=>{
-
-        if(p.inv.length < 3){
-
-            p.inv.push(
-                ITEMS[
-                    Math.floor(
-                        Math.random()*ITEMS.length
-                    )
-                ]
-            );
+        // FLIP LOGIC: If aiming left, flip Y and adjust rotation so it doesn't roll upside down
+        let flip = '';
+        if (mouseX < centerX) {
+            flip = 'scaleY(-1)';
+        } else {
+            flip = 'scaleY(1)';
         }
-    });
-}
+        
+        gun.style.transform = `rotate(${deg}deg) ${flip}`;
+    }
 
-function useItem(pIdx,slot){
+    window.addEventListener('mousemove', (e) => updateGunAim(e.clientX, e.clientY));
 
-    if(state.turn !== pIdx || !state.canShoot)
-    return;
+    function handleShoot(targetIdx) {
+        if (!state.canShoot) return;
+        state.canShoot = false;
 
-    const item = state.players[pIdx].inv[slot];
+        const bullet = state.chamber[state.chamberIdx];
+        const gun = document.getElementById('gun-emoji');
+        const light = document.getElementById('light-bulb');
+        
+        // 1. Shake before firing
+        gun.classList.add('shaking-heavy');
+        
+        // 2. Flash light color
+        const flashColor = bullet === 'LIVE' ? '#ff3333' : (bullet === 'FIRE' ? '#ffaa00' : '#33aaff');
+        
+        setTimeout(() => {
+            light.style.backgroundColor = flashColor;
+            light.style.boxShadow = `0 0 80px 30px ${flashColor}`;
+            
+            // 3. Recoil & Sound
+            gun.classList.remove('shaking-heavy');
+            gun.classList.add('recoil-anim');
+            playTone(bullet);
 
-    if(!item) return;
+            setTimeout(() => {
+                light.style.backgroundColor = '#ffe';
+                light.style.boxShadow = '0 0 60px 10px rgba(255, 255, 255, 0.1)';
+                gun.classList.remove('recoil-anim');
+                resolveShot(bullet, targetIdx);
+            }, 200);
+        }, 500);
+    }
 
-    state.players[pIdx].inv.splice(slot,1);
+    function resolveShot(type, targetIdx) {
+        let dmg = (type === 'LIVE') ? 1 : (type === 'FIRE' ? 2 : 0);
+        
+        if (dmg > 0) {
+            animateLifeLoss(targetIdx, dmg);
+        } else {
+            showToast("MISS", 1000);
+        }
 
-    switch(item.effect){
-
-        case "heal":
-
-            if(state.players[pIdx].lives < 4){
-                state.players[pIdx].lives++;
+        state.chamberIdx++;
+        
+        setTimeout(() => {
+            if (state.players[0].lives <= 0 || state.players[1].lives <= 0) {
+                endMatch();
+            } else if (state.chamberIdx >= 6) {
+                showStatsTransition();
+            } else {
+                state.turn = 1 - state.turn;
+                if (state.isSkipped) {
+                    state.isSkipped = false;
+                    state.turn = 1 - state.turn;
+                    showToast("SKIPPED", 1500);
+                }
+                state.canShoot = true;
+                updateUI();
             }
-
-            break;
-
-        case "skip":
-
-            state.isSkipped = true;
-
-            break;
-
-        case "inspect":
-
-            state.revealedIdx =
-            state.chamberIdx;
-
-            break;
-
-        case "shuffle":
-
-            let rem =
-            state.chamber
-            .slice(state.chamberIdx)
-            .sort(()=>Math.random()-.5);
-
-            state.chamber.splice(
-                state.chamberIdx,
-                rem.length,
-                ...rem
-            );
-
-            break;
-
-        case "extend":
-
-            state.maxRounds++;
-
-            break;
+        }, 1000);
     }
 
-    updateUI();
-}
-
-/* ===========================
-UI
-=========================== */
-
-function updateUI(){
-
-    state.players.forEach((p,i)=>{
-
-        const lives =
-        document.getElementById(`p${i}-lives`);
-
-        if(p.lives <= 0){
-
-            lives.innerHTML = "💀";
-
-        }else{
-
-            lives.innerHTML =
-            Array.from({length:p.lives})
-            .map(()=>`<span class="heart-pop">❤</span>`)
-            .join("");
+    function animateLifeLoss(pIdx, amount) {
+        const container = document.getElementById(`p${pIdx}-lives`);
+        for (let i = 0; i < amount; i++) {
+            setTimeout(() => {
+                const hearts = container.getElementsByClassName('heart');
+                if (hearts.length > 0) {
+                    hearts[hearts.length - 1].classList.add('heart-pop');
+                    state.players[pIdx].lives--;
+                }
+            }, i * 300);
         }
+    }
 
-        document.getElementById(
-            `p${i}-exp`
-        ).innerText = p.exp;
+    function showStatsTransition() {
+        const overlay = document.getElementById('stats-overlay');
+        const timerText = document.getElementById('stats-timer');
+        
+        document.getElementById('stats-round-title').innerText = `ROUND ${state.currentRound} COMPLETE`;
+        document.getElementById('stats-p0-report').innerText = `${state.players[0].name}: ${state.players[0].lives} LIVES`;
+        document.getElementById('stats-p1-report').innerText = `${state.players[1].name}: ${state.players[1].lives} LIVES`;
 
-        document.getElementById(
-            `p${i}-card`
-        ).className =
-        `player-card ${
-            state.turn === i ? "active" : ""
-        }`;
+        overlay.classList.add('active');
 
-        const slots =
-        document.querySelectorAll(
-            `#p${i}-inv .inv-slot`
-        );
-
-        slots.forEach((s,idx)=>{
-
-            if(p.inv[idx]){
-
-                s.innerText = p.inv[idx].icon;
-                s.title =
-                `${p.inv[idx].name}
-${p.inv[idx].desc}`;
-
-            }else{
-
-                s.innerText = "";
+        let count = 6;
+        const interval = setInterval(() => {
+            count--;
+            timerText.innerText = `Next round in ${count}s...`;
+            if (count <= 0) {
+                clearInterval(interval);
+                overlay.classList.remove('active');
+                state.currentRound++;
+                awardItems();
+                initChamber();
+                state.canShoot = true;
             }
-        });
-    });
-
-    document.getElementById("match-info")
-    .innerText =
-    `ROUND ${state.currentRound} / ${state.maxRounds}`;
-
-    document.getElementById("chamber-count")
-    .innerText =
-    `${6-state.chamberIdx}/6`;
-
-    let dots = "";
-
-    for(let i=0;i<6;i++){
-
-        let color = "#444";
-
-        if(i < state.chamberIdx){
-            color = "#111";
-        }
-
-        if(i === state.revealedIdx){
-            color = BULLET_COLORS[
-                state.chamber[i]
-            ];
-        }
-
-        dots +=
-        `<span class="ammo-dot"
-        style="color:${color}">
-        ●
-        </span>`;
+        }, 1000);
     }
 
-    document.getElementById("ammo-display")
-    .innerHTML = dots;
-
-    const gun =
-    document.getElementById("gun-system");
-
-    gun.style.left =
-    state.turn === 0 ? "45%" : "55%";
-
-    updateGunAim();
-}
-
-/* ===========================
-TOAST
-=========================== */
-
-function showToast(msg,dur){
-
-    const t =
-    document.getElementById("toast");
-
-    t.innerText = msg;
-
-    t.style.opacity = "1";
-
-    setTimeout(()=>{
-        t.style.opacity = "0";
-    },dur);
-}
-
-/* ===========================
-END MATCH
-=========================== */
-
-function endMatch(){
-
-    document.getElementById("end-screen")
-    .style.display = "flex";
-
-    let winner;
-
-    if(
-        state.players[0].lives >
-        state.players[1].lives
-    ){
-
-        winner = state.players[0].name;
-
-    }else if(
-        state.players[1].lives >
-        state.players[0].lives
-    ){
-
-        winner = state.players[1].name;
-
-    }else{
-
-        winner = "NO ONE";
+    function awardItems() {
+        state.players.forEach(p => {
+            if (p.inv.length < 3) p.inv.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+        });
     }
 
-    document.getElementById("winner-text")
-    .innerText =
-    `${winner} SURVIVED`;
-}
-
-function rematch(){
-
-    state.turn = 0;
-    state.chamberIdx = 0;
-    state.currentRound = 1;
-    state.maxRounds = 5;
-    state.canShoot = true;
-
-    state.players.forEach((p,i)=>{
-
-        p.lives = 4;
-        p.exp = 0;
-        p.inv = [];
-
-        document.getElementById(
-            `p${i}-card`
-        ).classList.remove("dead-tumble");
-    });
-
-    document.getElementById("end-screen")
-    .style.display = "none";
-
-    initChamber();
-}
-
-/* ===========================
-SHADOWS
-=========================== */
-
-const canvas =
-document.getElementById("lighting-overlay");
-
-const ctx = canvas.getContext("2d");
-
-function drawShadows(){
-
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    const pend =
-    document.getElementById(
-        "pendulum-container"
-    ).getBoundingClientRect();
-
-    const lx = pend.left + pend.width/2;
-    const ly = pend.bottom;
-
-    document.querySelectorAll(".player-card")
-    .forEach(card=>{
-
-        const r =
-        card.getBoundingClientRect();
-
-        const corners = [
-            {x:r.left,y:r.top},
-            {x:r.right,y:r.top},
-            {x:r.right,y:r.bottom},
-            {x:r.left,y:r.bottom}
-        ];
-
-        ctx.fillStyle =
-        "rgba(0,0,0,.55)";
-
-        corners.forEach((c,i)=>{
-
-            const n =
-            corners[(i+1)%4];
-
-            const e1 = {
-                x:c.x+(c.x-lx)*5,
-                y:c.y+(c.y-ly)*5
-            };
-
-            const e2 = {
-                x:n.x+(n.x-lx)*5,
-                y:n.y+(n.y-ly)*5
-            };
-
-            ctx.beginPath();
-
-            ctx.moveTo(c.x,c.y);
-            ctx.lineTo(n.x,n.y);
-            ctx.lineTo(e2.x,e2.y);
-            ctx.lineTo(e1.x,e1.y);
-
-            ctx.fill();
+    function updateUI() {
+        state.players.forEach((p, i) => {
+            const liveDiv = document.getElementById(`p${i}-lives`);
+            liveDiv.innerHTML = '';
+            for(let l=0; l<p.lives; l++) {
+                const s = document.createElement('span');
+                s.className = 'heart';
+                s.innerText = '❤';
+                liveDiv.appendChild(s);
+            }
+            
+            document.getElementById(`p${i}-card`).className = `player-card ${state.turn === i ? 'active' : ''}`;
+            
+            const slots = document.querySelectorAll(`#p${i}-inv .inv-slot`);
+            slots.forEach((s, idx) => {
+                s.innerText = p.inv[idx] ? p.inv[idx].icon : '';
+            });
         });
-    });
 
-    requestAnimationFrame(drawShadows);
-}
+        document.getElementById('match-info').innerText = `SEC_0${state.currentRound} // CHM_0${6 - state.chamberIdx}`;
+        document.getElementById('gun-system').style.left = (state.turn === 0) ? "42%" : "58%";
+    }
 
+    function playTone(type) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = (type === 'BLANK') ? 'sine' : 'sawtooth';
+        osc.frequency.setValueAtTime(type === 'BLANK' ? 200 : 100, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.1, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+        osc.start(); osc.stop(ctx.currentTime + 0.2);
+    }
+
+    function showToast(msg, dur) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.style.opacity = 1;
+        setTimeout(() => t.style.opacity = 0, dur);
+    }
+
+    function endMatch() {
+        alert("CRITICAL SYSTEM FAILURE: DUEL ENDED");
+        location.reload();
+    }
+
+    const canvas = document.getElementById('lighting-overlay');
+    const ctx = canvas.getContext('2d');
+    function drawShadows() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        
+        const pendulum = document.getElementById('pendulum-container').getBoundingClientRect();
+        const lx = pendulum.left;
+        const ly = pendulum.top + 250;
+
+        document.querySelectorAll('.player-card').forEach(card => {
+            const r = card.getBoundingClientRect();
+            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            const corners = [{x:r.left,y:r.top},{x:r.right,y:r.top},{x:r.right,y:r.bottom},{x:r.left,y:r.bottom}];
+            corners.forEach((c, i) => {
+                const n = corners[(i+1)%4];
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.y); ctx.lineTo(n.x, n.y);
+                ctx.lineTo(n.x+(n.x-lx)*10, n.y+(n.y-ly)*10);
+                ctx.lineTo(c.x+(c.x-lx)*10, c.y+(c.y-ly)*10);
+                ctx.fill();
+            });
+        });
+        requestAnimationFrame(drawShadows);
+    }
 </script>
 </body>
 </html>
