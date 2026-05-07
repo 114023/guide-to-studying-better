@@ -6,214 +6,273 @@
     <title>Rogue Roulette</title>
     <style>
         :root {
-            --bg-dark: #050505;
-            --panel-bg: rgba(15, 15, 15, 0.9);
-            --accent-yellow: #c2a000;
-            --live-red: #880000;
-            --blank-blue: #004488;
-            --fire-orange: #aa4400;
-            --heal-green: #115511;
-            --poison-purple: #440066;
-            --text-dim: #666;
-            --rust: #3d2b1f;
+            --bg-dark: #030303;
+            --panel-bg: rgba(10, 10, 10, 0.95);
+            --accent-yellow: #ffb800;
+            --live-red: #ff1a1a;
+            --blank-blue: #1a8cff;
+            --fire-orange: #ff5500;
+            --heal-green: #1aff1a;
+            --poison-purple: #8800cc;
+            --text-dim: #777;
         }
 
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
-            background-color: var(--bg-dark);
-            color: #bbb;
+            background-color: #000;
+            color: #ddd;
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
             user-select: none;
         }
 
-        /* Darker, Dingier Background */
         #game-container {
             position: relative;
             width: 100vw; height: 100vh;
-            background: 
-                radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%),
-                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), 
-                url('https://www.transparenttextures.com/patterns/dark-matter.png'),
-                #111;
+            /* Darker, grittier vignette effect with bricks */
+            background-image: radial-gradient(circle at 50% 50%, rgba(20,20,20,0.7) 0%, rgba(0,0,0,0.98) 80%), 
+                              url('https://static.vecteezy.com/system/resources/thumbnails/007/995/476/small/brick-wall-background-seamless-texture-pattern-illustration-free-vector.jpg');
+            background-repeat: repeat;
+            background-blend-mode: multiply;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            box-shadow: inset 0 0 200px #000;
         }
 
-        /* Pendulum Light */
+        /* Pendulum Light - Lengthened */
         #pendulum-container {
             position: absolute; top: 0; left: 50%;
-            width: 2px; height: 250px;
+            width: 2px; height: 350px;
             background: #222;
             transform-origin: top center;
             animation: swing 6s ease-in-out infinite;
             z-index: 6;
         }
         #light-bulb {
-            position: absolute; bottom: -25px; left: -12px;
-            width: 24px; height: 24px;
-            background: #ffe; border-radius: 50%;
-            box-shadow: 0 0 60px 10px rgba(255, 255, 255, 0.1);
+            position: absolute; bottom: -20px; left: -10px;
+            width: 20px; height: 20px;
+            background: #fff; border-radius: 50%;
+            box-shadow: 0 0 40px 15px rgba(255, 255, 255, 0.15);
             transition: background-color 0.1s, box-shadow 0.1s;
         }
         @keyframes swing {
-            0%, 100% { transform: rotate(12deg); }
-            50% { transform: rotate(-12deg); }
+            0%, 100% { transform: rotate(8deg); }
+            50% { transform: rotate(-8deg); }
         }
 
         #lighting-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 5; opacity: 0.6;
+            pointer-events: none; z-index: 5;
         }
-
-        /* Stats Overlay Slide */
-        #stats-overlay {
-            position: fixed; top: -100%; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 5, 0.98);
-            z-index: 1000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: top 0.8s cubic-bezier(0.85, 0, 0.15, 1);
-            border-bottom: 5px solid var(--rust);
-        }
-        #stats-overlay.active { top: 0; }
 
         /* Screens */
         .screen {
-            position: fixed; inset: 0; background: var(--bg-dark);
+            position: fixed; inset: 0; background: rgba(5,5,5,0.98);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 100;
         }
-        #main-menu { background: radial-gradient(#1a1a1a, #000); }
-
-        .lobby-card { 
-            background: #0f0f0f; padding: 20px; border: 1px solid #222; 
-            text-align: center; width: 250px; border-radius: 4px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        button { 
-            cursor: pointer; padding: 10px 20px; background: #1a1a1a; 
-            color: #888; border: 1px solid #333; font-family: inherit; 
-            margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;
-        }
-        button:hover { background: #222; color: var(--accent-yellow); border-color: var(--accent-yellow); }
+        #main-menu { background: #050505; }
+        .lobby-row { display: flex; gap: 50px; margin-bottom: 30px; }
+        .lobby-card { background: #111; padding: 20px; border: 1px solid #333; text-align: center; width: 250px; border-radius: 8px;}
+        input[type="text"] { background: #000; color: var(--accent-yellow); border: 1px solid #444; padding: 8px; text-align: center; margin-bottom: 10px; width: 80%; font-family: inherit; }
+        input[type="file"] { margin-top: 10px; font-size: 0.8rem; width: 100%; color: #888;}
+        button { cursor: pointer; padding: 10px 20px; background: #222; color: white; border: 1px solid #444; font-family: inherit; margin-top: 5px; border-radius: 4px; transition: all 0.2s;}
+        button:hover { background: var(--accent-yellow); color: black; border-color: var(--accent-yellow); }
 
         /* Arena */
-        .player-card {
-            width: 240px; padding: 25px;
-            background: var(--panel-bg);
-            border: 1px solid #222; border-radius: 2px;
-            text-align: center; position: relative;
+        #arena {
+            position: relative; width: 100%; flex-grow: 1;
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 10; padding-top: 80px;
         }
-        .player-card.active { border-color: #444; background: rgba(20,20,20,0.95); }
+
+        .player-card {
+            width: 240px; padding: 20px;
+            background: var(--panel-bg);
+            border: 2px solid #222; border-radius: 8px;
+            text-align: center; transition: background-color 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .player-card.active { border-color: var(--accent-yellow); box-shadow: 0 0 40px rgba(255, 184, 0, 0.15); }
+        .player-card.inactive { border-color: #1a1a1a; box-shadow: none; }
 
         .portrait {
-            width: 140px; height: 140px; margin: 0 auto 15px;
-            background-color: #000; background-size: cover; background-position: center;
-            border: 2px solid #222; filter: grayscale(0.5) contrast(1.2);
+            width: 130px; height: 130px; margin: 0 auto 15px;
+            background-color: #0a0a0a; background-size: cover; background-position: center;
+            border: 4px solid #222; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 5rem; cursor: crosshair;
+            font-size: 5rem; cursor: crosshair; transition: border-color 0.2s, transform 0.1s;
         }
-        .active .portrait { border-color: #333; filter: grayscale(0); }
+        .portrait:active { transform: scale(0.95); }
+        .active .portrait:hover { border-color: var(--live-red); }
+
+        /* Inventory & Tooltips */
+        .inventory { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+        .inv-slot { width: 45px; height: 45px; font-size: 1.3rem; position: relative; background: #0a0a0a; border: 1px solid #333; cursor: pointer; transition: border-color 0.2s;}
+        .inv-slot:hover { border-color: var(--accent-yellow); }
+        .inv-slot[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.95); border: 1px solid var(--accent-yellow);
+            color: #fff; padding: 8px; font-size: 0.75rem; white-space: nowrap;
+            z-index: 200; pointer-events: none; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+        }
 
         /* Gun Graphics */
         #gun-system {
             position: absolute; top: 55%; left: 50%;
             width: 140px; height: 80px;
-            transform: translate(-50%, -50%);
+            margin-left: -70px; margin-top: -40px;
             pointer-events: none; z-index: 15;
             display: flex; align-items: center; justify-content: center;
-            transition: left 0.5s ease-in-out;
+            transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .gun-emoji { 
-            font-size: 5rem; 
-            filter: drop-shadow(0 0 15px rgba(0,0,0,1)); 
-            transform-origin: center center;
+            font-size: 5.5rem; 
+            transition: transform 0.1s ease-out; 
+            filter: drop-shadow(0 15px 10px rgba(0,0,0,0.9)); 
+            transform-origin: center center; 
         }
 
-        /* Shake Effects */
-        @keyframes recoil {
-            0% { transform: translateX(0); }
-            10% { transform: translateX(-40px) rotate(-10deg); }
-            100% { transform: translateX(0); }
+        /* Health & Animations */
+        .heart { display: inline-block; margin: 0 2px; text-shadow: 0 0 5px rgba(255,0,0,0.5); }
+        .heart.breaking { animation: heart-break 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; color: #444; text-shadow: none; }
+        @keyframes heart-break {
+            0% { transform: scale(1); opacity: 1; }
+            30% { transform: scale(1.4) translateY(-10px) rotate(-15deg); color: #fff; }
+            100% { transform: scale(0) translateY(40px) rotate(45deg); opacity: 0; }
         }
-        .recoil-anim { animation: recoil 0.4s ease-out; }
 
-        @keyframes intense-shake {
-            0%, 100% { transform: translate(0,0); }
-            25% { transform: translate(2px, -2px); }
-            50% { transform: translate(-2px, 2px); }
-            75% { transform: translate(2px, 2px); }
-        }
-        .shaking-heavy { animation: intense-shake 0.1s infinite; }
-
-        /* Life Heart Animation */
-        .heart { display: inline-block; transition: all 0.5s ease; color: var(--live-red); margin: 0 2px; }
-        .heart-pop { transform: scale(2); opacity: 0; }
-
-        .ammo-dot { font-size: 1.5rem; margin: 0 4px; opacity: 0.3; }
-
+        /* Feedback */
         #toast {
-            position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
-            padding: 10px 40px; background: #000; border-left: 4px solid var(--accent-yellow);
-            color: #fff; z-index: 500; opacity: 0; transition: opacity 0.3s;
-            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 3px;
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            padding: 15px 30px; background: rgba(5,5,5,0.95); border: 1px solid var(--accent-yellow);
+            color: var(--accent-yellow); border-radius: 5px; opacity: 0; transition: opacity 0.5s; z-index: 200; pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); font-weight: bold; letter-spacing: 2px;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            40% { transform: translate(3px, 2px) rotate(-1deg); }
+            60% { transform: translate(-1px, -1px) rotate(1deg); }
+            80% { transform: translate(-3px, 1px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shaking { animation: shake 0.4s infinite; }
+
+        @keyframes prep-shake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -1px); }
+            75% { transform: translate(-1px, -2px); }
+            100% { transform: translate(1px, 1px); }
+        }
+        .prep-shaking .gun-emoji { animation: prep-shake 0.1s infinite; }
+
+        @keyframes shuffle-anim {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            50% { transform: scale(1.5) rotate(20deg); opacity: 0.3; filter: blur(4px); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+        }
+        .shuffling .gun-emoji { animation: shuffle-anim 0.7s ease-in-out; }
+
+        @keyframes tumble-death {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            20% { transform: translateY(-40px) rotate(-10deg); opacity: 1; }
+            100% { transform: translateY(120vh) rotate(180deg); opacity: 0; }
+        }
+        .dead-tumble {
+            animation: tumble-death 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+            pointer-events: none; border-color: #111;
+        }
+
+        .ammo-dot { font-size: 2.2rem; margin: 0 4px; color: #222; transition: color 0.4s, text-shadow 0.4s; }
+        .ammo-dot.glow { text-shadow: 0 0 10px currentColor; }
+
+        /* Round Transition Screen */
+        #round-transition {
+            position: fixed; inset: 0; background: rgba(5,5,5,0.98);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 300; transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1);
+            border-bottom: 2px solid var(--accent-yellow);
+        }
+        .stats-box {
+            background: #0a0a0a; padding: 25px 40px; border: 1px solid #333; border-radius: 8px; 
+            margin-bottom: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.9);
         }
     </style>
 </head>
 <body>
 
-<div id="stats-overlay">
-    <h1 id="stats-round-title" style="color: var(--accent-yellow); font-size: 3rem;">ROUND COMPLETE</h1>
-    <div id="stats-content" style="text-align: center; font-size: 1.5rem; line-height: 2;">
-        <p>REMAINING LIVES:</p>
-        <p id="stats-p0-report"></p>
-        <p id="stats-p1-report"></p>
+<div id="main-menu" class="screen">
+    <h1 style="color: var(--accent-yellow); font-size: 3.5rem; letter-spacing: 12px; text-shadow: 0 0 20px rgba(255,184,0,0.3); margin-bottom: 40px;">ROGUE ROULETTE</h1>
+    <div class="lobby-row">
+        <div class="lobby-card">
+            <h3 style="color: #aaa;">PLAYER 1</h3>
+            <input type="text" id="p0-name-in" value="PLAYER 1" maxlength="12">
+            <div id="p0-portrait-display" class="portrait" style="margin-top: 10px; cursor: default; border-color: #222;">👤</div>
+            <button onclick="cyclePortLobby(0)">Random Emoji</button>
+            <input type="file" id="p0-img-upload" accept="image/*" onchange="handleImageUpload(0, event)">
+        </div>
+        <div class="lobby-card">
+            <h3 style="color: #aaa;">PLAYER 2</h3>
+            <input type="text" id="p1-name-in" value="PLAYER 2" maxlength="12">
+            <div id="p1-portrait-display" class="portrait" style="margin-top: 10px; cursor: default; border-color: #222;">👤</div>
+            <button onclick="cyclePortLobby(1)">Random Emoji</button>
+            <input type="file" id="p1-img-upload" accept="image/*" onchange="handleImageUpload(1, event)">
+        </div>
     </div>
-    <div style="margin-top: 40px; color: #444;" id="stats-timer">Next round in 6s...</div>
+    <button style="font-size: 1.5rem; padding: 15px 60px; margin-top: 20px; font-weight: bold; letter-spacing: 3px;" onclick="startGame()">START DUEL</button>
 </div>
 
-<div id="main-menu" class="screen">
-    <h1 style="color: #444; font-size: 4rem; letter-spacing: 15px; margin-bottom: 5px;">ROGUE ROULETTE</h1>
-    <p style="color: #222; margin-bottom: 40px; letter-spacing: 5px;">TACTICAL CASUALTY SIMULATOR</p>
-    <div class="lobby-row" style="display: flex; gap: 30px;">
-        <div class="lobby-card">
-            <input type="text" id="p0-name-in" value="UNIT_01" style="background:#000; border:1px solid #333; color:var(--accent-yellow); text-align:center; padding:5px; width:80%;">
-            <div id="p0-portrait-display" class="portrait" style="margin-top:15px;">👤</div>
-            <button onclick="cyclePortLobby(0)">Mirror</button>
-        </div>
-        <div class="lobby-card">
-            <input type="text" id="p1-name-in" value="UNIT_02" style="background:#000; border:1px solid #333; color:var(--accent-yellow); text-align:center; padding:5px; width:80%;">
-            <div id="p1-portrait-display" class="portrait" style="margin-top:15px;">👤</div>
-            <button onclick="cyclePortLobby(1)">Mirror</button>
+<div id="round-transition">
+    <h1 id="rt-title" style="color: var(--accent-yellow); font-size: 4rem; letter-spacing: 10px; margin-bottom: 10px;">ROUND 2</h1>
+    <p style="color: #777; margin-bottom: 40px; font-size: 1.2rem;">PREPARE FOR THE NEXT CHAMBER</p>
+    
+    <div class="stats-box">
+        <h2 style="color: #fff; text-align: center; margin-top: 0; margin-bottom: 25px;">CURRENT STANDINGS</h2>
+        <div style="display: flex; gap: 80px;">
+            <div style="text-align: center;">
+                <h3 id="rt-p0-name" style="color: #aaa; margin-bottom: 5px;">P1</h3>
+                <p style="font-size: 1.5rem; margin: 0; color: var(--accent-yellow);">EXP: <span id="rt-p0-exp">0</span></p>
+            </div>
+            <div style="text-align: center;">
+                <h3 id="rt-p1-name" style="color: #aaa; margin-bottom: 5px;">P2</h3>
+                <p style="font-size: 1.5rem; margin: 0; color: var(--accent-yellow);">EXP: <span id="rt-p1-exp">0</span></p>
+            </div>
         </div>
     </div>
-    <button style="font-size: 1.5rem; padding: 15px 60px; margin-top: 40px;" onclick="startGame()">ENGAGE</button>
+    <h2 style="color: #555; font-size: 2rem;">STARTING IN <span id="rt-countdown" style="color: #fff;">6</span>...</h2>
 </div>
 
 <div id="game-container">
-    <div id="pendulum-container"><div id="light-bulb"></div></div>
+    <div id="pendulum-container">
+        <div id="light-bulb"></div>
+    </div>
     <canvas id="lighting-overlay"></canvas>
 
-    <div id="header" style="text-align: center; padding: 30px; z-index: 10;">
-        <div id="match-info" style="font-size: 1.2rem; color: #444; letter-spacing: 4px;">SEC_01 // CHM_06</div>
-        <div id="ammo-display"></div>
+    <div id="header" style="text-align: center; padding: 25px; z-index: 10; width: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);">
+        <div id="match-info" style="font-size: 1.5rem; color: var(--accent-yellow); font-weight: bold; letter-spacing: 2px;">ROUND 1 / 5</div>
+        <div id="ammo-display" style="margin-top: 5px;"></div>
     </div>
 
-    <div id="toast">SYSTEM MESSAGE</div>
+    <div id="toast">Message here</div>
 
     <div id="arena">
         <div id="p0-card" class="player-card active">
-            <div class="name-tag" id="p0-name-tag" style="font-weight: bold; margin-bottom: 10px;">UNIT_01</div>
+            <div class="name-tag" id="p0-name-tag" style="font-weight: bold; font-size: 1.2rem;">PLAYER 1</div>
+            <div id="p0-tier" style="font-size: 0.75rem; margin-bottom: 15px; color: #666; letter-spacing: 1px;">ROOKIE</div>
             <div class="portrait" id="p0-portrait" onclick="handleShoot(0)">👤</div>
-            <div id="p0-lives" style="font-size: 1.5rem;"></div>
-            <div class="inventory" id="p0-inv" style="display:flex; justify-content:center; gap:5px; margin-top:10px;">
-                <button class="inv-slot" onclick="useItem(0, 0)" style="width:35px; height:35px; padding:0;"></button>
-                <button class="inv-slot" onclick="useItem(0, 1)" style="width:35px; height:35px; padding:0;"></button>
-                <button class="inv-slot" onclick="useItem(0, 2)" style="width:35px; height:35px; padding:0;"></button>
+            <div class="stats" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px;">
+                <div style="margin-bottom: 5px;">LIVES: <span id="p0-lives"></span></div>
+                <div>EXP: <span id="p0-exp" style="color: var(--accent-yellow);">0</span></div>
             </div>
-            <div id="p0-status" style="height: 20px; font-size: 0.7rem; margin-top: 10px; opacity: 0.6;"></div>
+            <div class="inventory" id="p0-inv">
+                <button class="inv-slot" onclick="useItem(0, 0)"></button>
+                <button class="inv-slot" onclick="useItem(0, 1)"></button>
+                <button class="inv-slot" onclick="useItem(0, 2)"></button>
+            </div>
+            <div id="p0-status" style="height: 20px; font-size: 0.85rem; margin-top: 8px; font-weight: bold;"></div>
         </div>
 
         <div id="gun-system">
@@ -221,29 +280,58 @@
         </div>
 
         <div id="p1-card" class="player-card">
-            <div class="name-tag" id="p1-name-tag" style="font-weight: bold; margin-bottom: 10px;">UNIT_02</div>
+            <div class="name-tag" id="p1-name-tag" style="font-weight: bold; font-size: 1.2rem;">PLAYER 2</div>
+            <div id="p1-tier" style="font-size: 0.75rem; margin-bottom: 15px; color: #666; letter-spacing: 1px;">ROOKIE</div>
             <div class="portrait" id="p1-portrait" onclick="handleShoot(1)">👤</div>
-            <div id="p1-lives" style="font-size: 1.5rem;"></div>
-            <div class="inventory" id="p1-inv" style="display:flex; justify-content:center; gap:5px; margin-top:10px;">
-                <button class="inv-slot" onclick="useItem(1, 0)" style="width:35px; height:35px; padding:0;"></button>
-                <button class="inv-slot" onclick="useItem(1, 1)" style="width:35px; height:35px; padding:0;"></button>
-                <button class="inv-slot" onclick="useItem(1, 2)" style="width:35px; height:35px; padding:0;"></button>
+            <div class="stats" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px;">
+                <div style="margin-bottom: 5px;">LIVES: <span id="p1-lives"></span></div>
+                <div>EXP: <span id="p1-exp" style="color: var(--accent-yellow);">0</span></div>
             </div>
-            <div id="p1-status" style="height: 20px; font-size: 0.7rem; margin-top: 10px; opacity: 0.6;"></div>
+            <div class="inventory" id="p1-inv">
+                <button class="inv-slot" onclick="useItem(1, 0)"></button>
+                <button class="inv-slot" onclick="useItem(1, 1)"></button>
+                <button class="inv-slot" onclick="useItem(1, 2)"></button>
+            </div>
+            <div id="p1-status" style="height: 20px; font-size: 0.85rem; margin-top: 8px; font-weight: bold;"></div>
         </div>
     </div>
 
-    <div id="footer" style="padding: 20px; z-index: 10; font-size: 0.8rem; color: #222;">
-        STATUS: OPERATIONAL | CHAMBER: <span id="chamber-count">6/6</span>
+    <div id="footer" style="padding: 25px; z-index: 10; width: 100%; text-align: center; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+        <span style="color: #666; font-size: 1.1rem; letter-spacing: 2px;">CHAMBER: <span id="chamber-count" style="color: #aaa; font-weight: bold;">6/6</span></span>
+    </div>
+</div>
+
+<div id="end-screen" class="screen" style="display: none;">
+    <h1 id="winner-text" style="color: var(--accent-yellow); font-size: 4rem; margin-bottom: 10px; letter-spacing: 5px; text-shadow: 0 0 20px rgba(255,184,0,0.3);">MATCH OVER</h1>
+    <div class="stats-box" style="width: 400px;">
+        <h2 style="color: #fff; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">FINAL STATS</h2>
+        <p style="font-size: 1.2rem; color: #aaa;">ROUNDS SURVIVED: <span id="end-rounds" style="color: #fff;"></span></p>
+        <div style="display: flex; justify-content: space-between; margin-top: 25px;">
+            <div style="text-align: left;">
+                <h3 id="end-p0-name" style="margin: 0 0 5px 0; color: #888;">P1</h3>
+                <p style="margin: 0; font-size: 1.3rem; color: var(--accent-yellow);">EXP: <span id="end-p0-exp">0</span></p>
+            </div>
+            <div style="text-align: right;">
+                <h3 id="end-p1-name" style="margin: 0 0 5px 0; color: #888;">P2</h3>
+                <p style="margin: 0; font-size: 1.3rem; color: var(--accent-yellow);">EXP: <span id="end-p1-exp">0</span></p>
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 20px;">
+        <button onclick="rematch()" style="font-size: 1.2rem; padding: 15px 40px; font-weight: bold;">REMATCH</button>
+        <button onclick="mainMenu()" style="font-size: 1.2rem; padding: 15px 40px; background: #3a0a0a; border-color: #5a1a1a;">MAIN MENU</button>
     </div>
 </div>
 
 <script>
+    const ROUND_TYPES = { LIVE: 'LIVE', BLANK: 'BLANK', FIRE: 'FIRE' };
+    const BULLET_COLORS = { LIVE: 'var(--live-red)', BLANK: 'var(--blank-blue)', FIRE: 'var(--fire-orange)' };
     const ITEMS = [
-        { name: 'Fixer', icon: '💉', effect: 'heal' },
-        { name: 'Restraint', icon: '⛓️', effect: 'skip' },
-        { name: 'Lens', icon: '🔍', effect: 'inspect' },
-        { name: 'Chaos', icon: '🎲', effect: 'shuffle' }
+        { name: 'Medkit', icon: '💉', effect: 'heal', desc: "Heals 1 life, don't overdose." },
+        { name: 'Handcuffs', icon: '⛓️', effect: 'skip', desc: 'Skips opponent\'s next turn.' },
+        { name: 'Magnifier', icon: '🔍', effect: 'inspect', desc: 'Reveals the current loaded round.' },
+        { name: 'Dice', icon: '🎲', effect: 'shuffle', desc: 'Shuffles the remaining chamber.' },
+        { name: 'Chronos', icon: '⏳', effect: 'extend', desc: 'Adds +1 round to match duration.' }
     ];
 
     let state = {
@@ -251,158 +339,315 @@
         chamber: [],
         chamberIdx: 0,
         currentRound: 1,
+        maxRounds: 5,
         canShoot: true,
+        bonusShot: false,
         isSkipped: false,
+        revealedIdx: -1,
         players: [
-            { name: "P1", lives: 4, inv: [], port: "👤", portIdx: 0 },
-            { name: "P2", lives: 4, inv: [], port: "👤", portIdx: 0 }
+            { name: "P1", lives: 4, exp: 0, inv: [], port: "👤", portIdx: 0, customImg: null },
+            { name: "P2", lives: 4, exp: 0, inv: [], port: "👤", portIdx: 0, customImg: null }
         ]
     };
 
-    const portraits = ["👤", "💀", "👺", "🤡", "🤖", "👽"];
+    let mouseX = window.innerWidth / 2;
+    const portraits = ["👤", "💀", "👺", "🤡", "🤖", "🤠", "👽", "👹", "🐱", "🐶"];
 
+    // Mouse Tracking for Gun Aiming (Flip Left/Right ONLY)
+    window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        if (state.canShoot && document.getElementById('main-menu').style.display === 'none') {
+            updateGunAim();
+        }
+    });
+
+    function updateGunAim() {
+        const gunContainer = document.getElementById('gun-system');
+        const gunEmoji = document.getElementById('gun-emoji');
+        const rect = gunContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+
+        // Emoji 🔫 faces left naturally. ScaleX(1) = left, ScaleX(-1) = right
+        if (mouseX < centerX) {
+            gunEmoji.style.transform = `scaleX(1)`; 
+        } else {
+            gunEmoji.style.transform = `scaleX(-1)`;
+        }
+    }
+
+    // Audio & Pulse System
+    function triggerPulseAndSound(targetIdx, type) {
+        const card = document.getElementById(`p${targetIdx}-card`);
+        let color = 'var(--panel-bg)';
+        let freq = 100;
+        let isHarmful = false;
+        
+        if (type === 'HEAL') { color = 'var(--heal-green)'; freq = 400; } 
+        else if (type === 'POISON') { color = 'var(--poison-purple)'; freq = 60; isHarmful = true; } 
+        else if (type === 'LIVE') { color = 'var(--live-red)'; freq = 150; isHarmful = true; } 
+        else if (type === 'FIRE') { color = 'var(--fire-orange)'; freq = 80; isHarmful = true; } 
+        else if (type === 'BLANK') { color = 'var(--blank-blue)'; freq = 300; }
+
+        card.style.backgroundColor = color;
+        setTimeout(() => card.style.backgroundColor = 'var(--panel-bg)', 400);
+
+        if (isHarmful) {
+            card.classList.add('shaking');
+            setTimeout(() => card.classList.remove('shaking'), 400);
+        }
+
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = (type === 'BLANK' || type === 'HEAL') ? 'sine' : 'sawtooth';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            
+            if(type === 'HEAL') osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.3);
+            else osc.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.3);
+            
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(); osc.stop(ctx.currentTime + 0.3);
+        } catch(e) {}
+    }
+
+    // Lobby Logic
     function cyclePortLobby(p) {
+        state.players[p].customImg = null; 
         state.players[p].portIdx = (state.players[p].portIdx + 1) % portraits.length;
         state.players[p].port = portraits[state.players[p].portIdx];
-        document.getElementById(`p${p}-portrait-display`).innerText = state.players[p].port;
+        
+        const display = document.getElementById(`p${p}-portrait-display`);
+        display.style.backgroundImage = 'none';
+        display.innerText = state.players[p].port;
+    }
+
+    function handleImageUpload(pIdx, event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                state.players[pIdx].customImg = e.target.result;
+                const display = document.getElementById(`p${pIdx}-portrait-display`);
+                display.innerText = '';
+                display.style.backgroundImage = `url(${e.target.result})`;
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     function startGame() {
         for(let i=0; i<2; i++) {
-            state.players[i].name = document.getElementById(`p${i}-name-in`).value.toUpperCase();
+            let n = document.getElementById(`p${i}-name-in`).value.trim();
+            if (n.toLowerCase() === 'logan') n = "ORPHAN";
+            state.players[i].name = n.toUpperCase() || `PLAYER ${i+1}`;
+            
             document.getElementById(`p${i}-name-tag`).innerText = state.players[i].name;
-            document.getElementById(`p${i}-portrait`).innerText = state.players[i].port;
+            
+            const portEl = document.getElementById(`p${i}-portrait`);
+            if (state.players[i].customImg) {
+                portEl.innerText = '';
+                portEl.style.backgroundImage = `url(${state.players[i].customImg})`;
+            } else {
+                portEl.style.backgroundImage = 'none';
+                portEl.innerText = state.players[i].port;
+            }
         }
+        
         document.getElementById('main-menu').style.display = 'none';
+        try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch(e){}
+        
         initChamber();
         drawShadows();
+    }
+
+    function mainMenu() {
+        document.getElementById('end-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+        resetState();
+    }
+
+    function rematch() {
+        resetState();
+        document.getElementById('end-screen').style.display = 'none';
+        initChamber();
+    }
+
+    function resetState() {
+        state.turn = 0;
+        state.currentRound = 1;
+        state.maxRounds = 5;
+        state.canShoot = true;
+        state.bonusShot = false;
+        state.isSkipped = false;
+        state.revealedIdx = -1;
+
+        state.players.forEach((p, i) => {
+            p.lives = 4;
+            p.exp = 0;
+            p.inv = [];
+            const card = document.getElementById(`p${i}-card`);
+            card.classList.remove('dead-tumble');
+            card.style.transform = ''; 
+            card.style.opacity = '1'; 
+        });
     }
 
     function initChamber() {
         let pool = ['LIVE', 'LIVE', 'BLANK', 'BLANK', 'BLANK', 'FIRE'];
         state.chamber = pool.sort(() => Math.random() - 0.5);
         state.chamberIdx = 0;
+        state.revealedIdx = -1;
         updateUI();
     }
 
-    function updateGunAim(mouseX, mouseY) {
-        const gun = document.getElementById('gun-emoji');
-        const container = document.getElementById('gun-system');
-        const rect = container.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        const angle = Math.atan2(mouseY - centerY, mouseX - centerX);
-        let deg = angle * (180 / Math.PI);
-
-        // FLIP LOGIC: If aiming left, flip Y and adjust rotation so it doesn't roll upside down
-        let flip = '';
-        if (mouseX < centerX) {
-            flip = 'scaleY(-1)';
-        } else {
-            flip = 'scaleY(1)';
-        }
-        
-        gun.style.transform = `rotate(${deg}deg) ${flip}`;
-    }
-
-    window.addEventListener('mousemove', (e) => updateGunAim(e.clientX, e.clientY));
-
     function handleShoot(targetIdx) {
         if (!state.canShoot) return;
-        state.canShoot = false;
-
+        
+        const isSelf = (targetIdx === state.turn);
         const bullet = state.chamber[state.chamberIdx];
-        const gun = document.getElementById('gun-emoji');
-        const light = document.getElementById('light-bulb');
+        state.canShoot = false; 
+        state.revealedIdx = -1; 
         
-        // 1. Shake before firing
-        gun.classList.add('shaking-heavy');
-        
-        // 2. Flash light color
-        const flashColor = bullet === 'LIVE' ? '#ff3333' : (bullet === 'FIRE' ? '#ffaa00' : '#33aaff');
-        
-        setTimeout(() => {
-            light.style.backgroundColor = flashColor;
-            light.style.boxShadow = `0 0 80px 30px ${flashColor}`;
-            
-            // 3. Recoil & Sound
-            gun.classList.remove('shaking-heavy');
-            gun.classList.add('recoil-anim');
-            playTone(bullet);
+        const gunContainer = document.getElementById('gun-system');
+        const gunEmoji = document.getElementById('gun-emoji');
+        const bulb = document.getElementById('light-bulb');
 
-            setTimeout(() => {
-                light.style.backgroundColor = '#ffe';
-                light.style.boxShadow = '0 0 60px 10px rgba(255, 255, 255, 0.1)';
-                gun.classList.remove('recoil-anim');
-                resolveShot(bullet, targetIdx);
-            }, 200);
+        // Pre-fire Shake & Flash
+        gunContainer.classList.add('prep-shaking');
+        bulb.style.backgroundColor = BULLET_COLORS[bullet];
+        bulb.style.boxShadow = `0 0 60px 25px ${BULLET_COLORS[bullet]}`;
+
+        setTimeout(() => {
+            // Firing
+            gunContainer.classList.remove('prep-shaking');
+            bulb.style.backgroundColor = '#fff';
+            bulb.style.boxShadow = '0 0 40px 15px rgba(255, 255, 255, 0.15)';
+
+            // Recoil Animation (pushes opposite to aim)
+            const currentTransform = gunEmoji.style.transform;
+            const pushDir = currentTransform.includes('-1') ? '30px' : '-30px';
+            gunEmoji.style.transform = currentTransform + ` translateX(${pushDir})`;
+            setTimeout(() => gunEmoji.style.transform = currentTransform, 150);
+
+            triggerPulseAndSound(targetIdx, bullet);
+            resolveShot(bullet, targetIdx, isSelf);
         }, 500);
     }
 
-    function resolveShot(type, targetIdx) {
-        let dmg = (type === 'LIVE') ? 1 : (type === 'FIRE' ? 2 : 0);
-        
+    function resolveShot(type, targetIdx, isSelf) {
+        let dmg = 0;
+        if (type === 'LIVE') dmg = 1;
+        if (type === 'FIRE') dmg = 2;
+
         if (dmg > 0) {
-            animateLifeLoss(targetIdx, dmg);
+            // Animate Hearts Breaking First
+            let pLivesEl = document.getElementById(`p${targetIdx}-lives`);
+            let hearts = pLivesEl.querySelectorAll('.heart.alive');
+            let lost = Math.min(dmg, hearts.length);
+
+            for (let i = 0; i < lost; i++) {
+                let h = hearts[hearts.length - 1 - i];
+                if (h) {
+                    h.classList.remove('alive');
+                    h.classList.add('breaking');
+                }
+            }
+
+            setTimeout(() => {
+                state.players[targetIdx].lives -= dmg;
+                state.players[targetIdx].exp = Math.max(0, state.players[targetIdx].exp - 10);
+                showToast(`${state.players[targetIdx].name} WAS HIT!`, 2500);
+                postShotCleanup(isSelf, dmg);
+            }, 800); // Wait for break animation
         } else {
-            showToast("MISS", 1000);
+            showToast("...CLICK. SAFE.", 2000);
+            postShotCleanup(isSelf, dmg);
+        }
+    }
+
+    function postShotCleanup(isSelf, dmg) {
+        if (dmg === 0 && isSelf) {
+            state.players[state.turn].exp += 15;
+            if (!state.bonusShot) {
+                state.bonusShot = true;
+                showStatus(state.turn, "BONUS SHOT", "var(--accent-yellow)");
+                state.chamberIdx++;
+                setTimeout(() => {
+                    state.canShoot = true; 
+                    updateUI();
+                }, 1500);
+                return;
+            }
         }
 
         state.chamberIdx++;
-        
+        state.bonusShot = false;
+
+        if (state.players[0].lives <= 0 || state.players[1].lives <= 0) {
+            updateUI();
+            if (state.players[0].lives <= 0) document.getElementById('p0-card').classList.add('dead-tumble');
+            if (state.players[1].lives <= 0) document.getElementById('p1-card').classList.add('dead-tumble');
+            setTimeout(endMatch, 2000); 
+            return;
+        }
+
         setTimeout(() => {
-            if (state.players[0].lives <= 0 || state.players[1].lives <= 0) {
-                endMatch();
-            } else if (state.chamberIdx >= 6) {
-                showStatsTransition();
-            } else {
-                state.turn = 1 - state.turn;
-                if (state.isSkipped) {
-                    state.isSkipped = false;
-                    state.turn = 1 - state.turn;
-                    showToast("SKIPPED", 1500);
-                }
-                state.canShoot = true;
-                updateUI();
-            }
-        }, 1000);
+            if (state.chamberIdx >= 6) nextRound();
+            else passTurn();
+            updateUI();
+        }, 1500);
     }
 
-    function animateLifeLoss(pIdx, amount) {
-        const container = document.getElementById(`p${pIdx}-lives`);
-        for (let i = 0; i < amount; i++) {
-            setTimeout(() => {
-                const hearts = container.getElementsByClassName('heart');
-                if (hearts.length > 0) {
-                    hearts[hearts.length - 1].classList.add('heart-pop');
-                    state.players[pIdx].lives--;
-                }
-            }, i * 300);
+    function passTurn() {
+        let next = 1 - state.turn;
+        if (state.isSkipped) {
+            state.isSkipped = false;
+            showToast(`${state.players[next].name} IS HANDCUFFED.`, 2500);
+            setTimeout(() => state.canShoot = true, 1000);
+        } else {
+            state.turn = next;
+            state.canShoot = true; 
         }
     }
 
-    function showStatsTransition() {
-        const overlay = document.getElementById('stats-overlay');
-        const timerText = document.getElementById('stats-timer');
+    function nextRound() {
+        state.currentRound++;
+        if (state.currentRound > state.maxRounds) {
+            endMatch();
+            return;
+        }
         
-        document.getElementById('stats-round-title').innerText = `ROUND ${state.currentRound} COMPLETE`;
-        document.getElementById('stats-p0-report').innerText = `${state.players[0].name}: ${state.players[0].lives} LIVES`;
-        document.getElementById('stats-p1-report').innerText = `${state.players[1].name}: ${state.players[1].lives} LIVES`;
-
-        overlay.classList.add('active');
+        state.canShoot = false;
+        
+        // Setup Transition Screen
+        document.getElementById('rt-title').innerText = `ROUND ${state.currentRound}`;
+        document.getElementById('rt-p0-name').innerText = state.players[0].name;
+        document.getElementById('rt-p1-name').innerText = state.players[1].name;
+        document.getElementById('rt-p0-exp').innerText = state.players[0].exp;
+        document.getElementById('rt-p1-exp').innerText = state.players[1].exp;
+        
+        const rtScreen = document.getElementById('round-transition');
+        rtScreen.style.transform = 'translateY(0)'; // Slide down
 
         let count = 6;
-        const interval = setInterval(() => {
+        document.getElementById('rt-countdown').innerText = count;
+        
+        const timer = setInterval(() => {
             count--;
-            timerText.innerText = `Next round in ${count}s...`;
-            if (count <= 0) {
-                clearInterval(interval);
-                overlay.classList.remove('active');
-                state.currentRound++;
-                awardItems();
-                initChamber();
-                state.canShoot = true;
+            if(count > 0) {
+                document.getElementById('rt-countdown').innerText = count;
+            } else {
+                clearInterval(timer);
+                rtScreen.style.transform = 'translateY(-100%)'; // Slide up
+                setTimeout(() => {
+                    awardItems();
+                    initChamber();
+                    state.turn = 0;
+                    state.canShoot = true;
+                }, 600); // Wait for slide up
             }
         }, 1000);
     }
@@ -413,40 +658,100 @@
         });
     }
 
+    function useItem(pIdx, slot) {
+        if (state.turn !== pIdx || !state.canShoot) return;
+        const item = state.players[pIdx].inv[slot];
+        if (!item) return;
+
+        state.players[pIdx].inv.splice(slot, 1);
+        state.canShoot = false; // Prevent clicks during item anim
+        
+        switch(item.effect) {
+            case 'heal':
+                if (state.players[pIdx].lives >= 4) {
+                    state.players[pIdx].lives--;
+                    showStatus(pIdx, "OVERDOSE! POISONED", "var(--poison-purple)");
+                    triggerPulseAndSound(pIdx, 'POISON');
+                } else {
+                    state.players[pIdx].lives++;
+                    showStatus(pIdx, "STABILIZED", "var(--heal-green)");
+                    triggerPulseAndSound(pIdx, 'HEAL');
+                }
+                setTimeout(() => state.canShoot = true, 1000);
+                break;
+            case 'skip':
+                state.isSkipped = true;
+                showToast("NEXT TURN SKIPPED", 2500);
+                setTimeout(() => state.canShoot = true, 1000);
+                break;
+            case 'inspect':
+                state.revealedIdx = state.chamberIdx;
+                showToast(`NEXT ROUND IS ${state.chamber[state.chamberIdx]}`, 3000);
+                setTimeout(() => state.canShoot = true, 1000);
+                break;
+            case 'shuffle':
+                document.getElementById('gun-system').classList.add('shuffling');
+                setTimeout(() => {
+                    let rem = state.chamber.slice(state.chamberIdx).sort(() => Math.random() - 0.5);
+                    state.chamber.splice(state.chamberIdx, rem.length, ...rem);
+                    document.getElementById('gun-system').classList.remove('shuffling');
+                    state.canShoot = true; 
+                    updateUI();
+                }, 700);
+                return; // Return early to skip the immediate updateUI/canShoot below
+            case 'extend':
+                state.maxRounds++;
+                showToast("MATCH EXTENDED", 2500);
+                setTimeout(() => state.canShoot = true, 1000);
+                break;
+        }
+        updateUI();
+    }
+
     function updateUI() {
         state.players.forEach((p, i) => {
-            const liveDiv = document.getElementById(`p${i}-lives`);
-            liveDiv.innerHTML = '';
-            for(let l=0; l<p.lives; l++) {
-                const s = document.createElement('span');
-                s.className = 'heart';
-                s.innerText = '❤';
-                liveDiv.appendChild(s);
+            // Heart Rendering
+            let livesHTML = "";
+            for(let j=0; j<4; j++) {
+                if(j < p.lives) livesHTML += '<span class="heart alive" style="color: var(--live-red);">❤</span>';
+                else livesHTML += '<span class="heart dead" style="color: #222;">❤</span>';
             }
+            document.getElementById(`p${i}-lives`).innerHTML = p.lives > 0 ? livesHTML : "💀";
             
-            document.getElementById(`p${i}-card`).className = `player-card ${state.turn === i ? 'active' : ''}`;
+            document.getElementById(`p${i}-exp`).innerText = p.exp;
+            document.getElementById(`p${i}-card`).className = `player-card ${state.turn === i ? 'active' : 'inactive'}`;
             
             const slots = document.querySelectorAll(`#p${i}-inv .inv-slot`);
             slots.forEach((s, idx) => {
-                s.innerText = p.inv[idx] ? p.inv[idx].icon : '';
+                if (p.inv[idx]) {
+                    s.innerText = p.inv[idx].icon;
+                    s.setAttribute('data-tooltip', `${p.inv[idx].name}: ${p.inv[idx].desc}`);
+                } else {
+                    s.innerText = "";
+                    s.removeAttribute('data-tooltip');
+                }
             });
         });
 
-        document.getElementById('match-info').innerText = `SEC_0${state.currentRound} // CHM_0${6 - state.chamberIdx}`;
-        document.getElementById('gun-system').style.left = (state.turn === 0) ? "42%" : "58%";
-    }
+        document.getElementById('match-info').innerText = `ROUND ${state.currentRound} / ${state.maxRounds}`;
+        document.getElementById('chamber-count').innerText = `${6 - state.chamberIdx}/6`;
+        
+        let dots = "";
+        for(let i=0; i<6; i++) {
+            let color = "#222";
+            let glow = "";
+            if (i < state.chamberIdx) color = "#0a0a0a"; 
+            else if (i === state.revealedIdx) {
+                color = BULLET_COLORS[state.chamber[i]];
+                glow = "glow";
+            }
+            dots += `<span class="ammo-dot ${glow}" style="color: ${color}">●</span>`;
+        }
+        document.getElementById('ammo-display').innerHTML = dots;
 
-    function playTone(type) {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.connect(g); g.connect(ctx.destination);
-        osc.type = (type === 'BLANK') ? 'sine' : 'sawtooth';
-        osc.frequency.setValueAtTime(type === 'BLANK' ? 200 : 100, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-        g.gain.setValueAtTime(0.1, ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
-        osc.start(); osc.stop(ctx.currentTime + 0.2);
+        const gunContainer = document.getElementById('gun-system');
+        gunContainer.style.left = (state.turn === 0) ? "42%" : "58%";
+        updateGunAim();
     }
 
     function showToast(msg, dur) {
@@ -456,11 +761,28 @@
         setTimeout(() => t.style.opacity = 0, dur);
     }
 
-    function endMatch() {
-        alert("CRITICAL SYSTEM FAILURE: DUEL ENDED");
-        location.reload();
+    function showStatus(p, msg, col) {
+        const s = document.getElementById(`p${p}-status`);
+        s.innerText = msg;
+        s.style.color = col;
+        setTimeout(() => s.innerText = "", 3000);
     }
 
+    function endMatch() {
+        document.getElementById('end-screen').style.display = 'flex';
+        let win = state.players[0].lives > state.players[1].lives ? state.players[0].name : state.players[1].name;
+        if (state.players[0].lives <= 0 && state.players[1].lives <= 0) win = "NO ONE";
+        else if (state.players[0].lives === state.players[1].lives) win = "DRAW - BOTH";
+        
+        document.getElementById('winner-text').innerText = `${win} SURVIVED`;
+        document.getElementById('end-rounds').innerText = state.currentRound;
+        document.getElementById('end-p0-name').innerText = state.players[0].name;
+        document.getElementById('end-p1-name').innerText = state.players[1].name;
+        document.getElementById('end-p0-exp').innerText = state.players[0].exp;
+        document.getElementById('end-p1-exp').innerText = state.players[1].exp;
+    }
+
+    // Shadow Rendering
     const canvas = document.getElementById('lighting-overlay');
     const ctx = canvas.getContext('2d');
     function drawShadows() {
@@ -469,24 +791,28 @@
         ctx.clearRect(0,0,canvas.width, canvas.height);
         
         const pendulum = document.getElementById('pendulum-container').getBoundingClientRect();
-        const lx = pendulum.left;
-        const ly = pendulum.top + 250;
+        const lightX = pendulum.left + pendulum.width/2;
+        const lightY = pendulum.top + pendulum.height;
 
         document.querySelectorAll('.player-card').forEach(card => {
             const r = card.getBoundingClientRect();
-            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            if (r.bottom < 0 || r.top > window.innerHeight) return; 
+
             const corners = [{x:r.left,y:r.top},{x:r.right,y:r.top},{x:r.right,y:r.bottom},{x:r.left,y:r.bottom}];
+            ctx.fillStyle = "rgba(0,0,0,0.85)";
             corners.forEach((c, i) => {
                 const n = corners[(i+1)%4];
+                const e1 = { x: c.x+(c.x-lightX)*5, y: c.y+(c.y-lightY)*5 };
+                const e2 = { x: n.x+(n.x-lightX)*5, y: n.y+(n.y-lightY)*5 };
                 ctx.beginPath();
                 ctx.moveTo(c.x, c.y); ctx.lineTo(n.x, n.y);
-                ctx.lineTo(n.x+(n.x-lx)*10, n.y+(n.y-ly)*10);
-                ctx.lineTo(c.x+(c.x-lx)*10, c.y+(c.y-ly)*10);
+                ctx.lineTo(e2.x, e2.y); ctx.lineTo(e1.x, e1.y);
                 ctx.fill();
             });
         });
         requestAnimationFrame(drawShadows);
     }
 </script>
+
 </body>
 </html>
